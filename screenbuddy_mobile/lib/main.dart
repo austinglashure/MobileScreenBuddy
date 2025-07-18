@@ -461,10 +461,15 @@ class MainScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ScreenBuddy Home'),
-        automaticallyImplyLeading: false,
+        backgroundColor: const Color(0xFF2b343d),
+        title: const Text('ScreenBuddy Home', style: TextStyle(
+          color: Color(0xFFE75A7C),
+          fontFamily: 'Fredoka',
+          fontWeight: FontWeight.w400,
+        ), // text color and font
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.assignment),
+          icon: const Icon(Icons.assignment, color: Color(0xFFE75A7C)),
           tooltip: 'Goals',
           onPressed: () {
             Navigator.of(context).push(
@@ -476,7 +481,7 @@ class MainScreen extends StatelessWidget {
         ),
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.analytics),
+            icon: const Icon(Icons.analytics, color: Color(0xFFE75A7C)),
             tooltip: 'Statistics',
             onPressed: () {
               Navigator.of(context).push(
@@ -487,7 +492,7 @@ class MainScreen extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.shopping_bag),
+            icon: const Icon(Icons.shopping_bag, color: Color(0xFFE75A7C)),
             tooltip: 'Shop',
             onPressed: () {
               Navigator.of(context).push(
@@ -498,7 +503,7 @@ class MainScreen extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Color(0xFFE75A7C)),
             tooltip: 'Logout',
             onPressed: () {
               authModel.resetState();
@@ -518,7 +523,10 @@ class MainScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               username != null ? 'Hello, $username!' : 'Hello!',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(            fontSize: 28,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Fredoka',
+              color: Color(0xFFE75A7C)),
             ),
             const Spacer(flex: 2),
             // Arbitrary values in the bottom third
