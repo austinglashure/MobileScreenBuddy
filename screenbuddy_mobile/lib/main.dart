@@ -82,6 +82,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'ScreenBuddy',
       theme: ThemeData(
+        textSelectionTheme: const TextSelectionThemeData(
+          selectionColor: Color(0xFFE75A7C), // background when text is selected
+          selectionHandleColor: Color(0xFFE75A7C), // drag handles
+        ),
+        scaffoldBackgroundColor: const Color(0xFF34404B), // Set background color
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         inputDecorationTheme: const InputDecorationTheme(
@@ -104,6 +109,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 
 /// A wrapper widget that decides which screen to display based on the
 /// authentication model's state (AuthScreen or MainScreen).
@@ -132,7 +138,13 @@ class AuthScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome to ScreenBuddy')),
+      appBar: AppBar(title: const Text(
+    'Welcome to ScreenBuddy',
+          style: TextStyle(color: Color(0xFFE75A7C), fontFamily: 'Fredoka', fontWeight: FontWeight.w400),
+            // text color
+        ),
+        backgroundColor: Color(0xFF2b343d),  // background color of the bar
+      ),
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
@@ -157,7 +169,7 @@ class AuthScreen extends StatelessWidget {
                                 ? 'Don\'t have an account? Register'
                                 : 'Already have an account? Login',
                             style: TextStyle(
-                              color: Theme.of(context).primaryColor,
+                              color: Color(0xFFE75A7C),
                             ),
                           ),
                         ),
@@ -188,6 +200,7 @@ class _LoginCardState extends State<LoginCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: const Color(0xFF2b343d),
       elevation: 8.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       child: Padding(
@@ -199,13 +212,22 @@ class _LoginCardState extends State<LoginCard> {
             children: <Widget>[
               const Text(
                 'Login',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w400, fontFamily: 'Fredoka', color: Color(0xFFE75A7C)),
               ),
               const SizedBox(height: 20),
               TextFormField(
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Colors.white),
+                cursorColor: Colors.white,
+                decoration: const InputDecoration(  
                   labelText: 'Username',
-                  prefixIcon: Icon(Icons.person),
+                  labelStyle: TextStyle(color: Colors.white), // label color
+                  prefixIcon: Icon(Icons.person, color: Colors.white), // icon color
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
                 ),
                 validator: (String? value) {
                   if (value == null || value.isEmpty) {
@@ -222,26 +244,39 @@ class _LoginCardState extends State<LoginCard> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock),
+                  style: const TextStyle(color: Colors.white),
+                  cursorColor: Colors.white,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    labelStyle: TextStyle(color: Colors.white), // label color
+                    prefixIcon: Icon(Icons.lock, color: Colors.white), // icon color
+                                      enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  obscureText: true,
+                  validator: (String? value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password.';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters.';
+                    }
+                    return null;
+                  },
+                  onSaved: (String? value) {
+                    _password = value!;
+                  },
                 ),
-                obscureText: true,
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password.';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters.';
-                  }
-                  return null;
-                },
-                onSaved: (String? value) {
-                  _password = value!;
-                },
-              ),
               const SizedBox(height: 20),
               ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFFE75A7C), // pink background
+                  foregroundColor: Colors.white,     // white text
+                ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
@@ -278,6 +313,7 @@ class _RegisterCardState extends State<RegisterCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: const Color(0xFF2b343d),
       elevation: 8.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       child: Padding(
@@ -289,13 +325,27 @@ class _RegisterCardState extends State<RegisterCard> {
             children: <Widget>[
               const Text(
                 'Register',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: 'Fredoka',
+                  color: Color(0xFFE75A7C),
+                ),
               ),
               const SizedBox(height: 20),
               TextFormField(
+                style: const TextStyle(color: Colors.white),
+                cursorColor: Colors.white,
                 decoration: const InputDecoration(
                   labelText: 'Username',
-                  prefixIcon: Icon(Icons.person),
+                  labelStyle: TextStyle(color: Colors.white),
+                  prefixIcon: Icon(Icons.person, color: Colors.white),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
                 ),
                 validator: (String? value) {
                   if (value == null || value.isEmpty) {
@@ -315,9 +365,18 @@ class _RegisterCardState extends State<RegisterCard> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                style: const TextStyle(color: Colors.white),
+                cursorColor: Colors.white,
                 decoration: const InputDecoration(
                   labelText: 'Email',
-                  prefixIcon: Icon(Icons.email),
+                  labelStyle: TextStyle(color: Colors.white),
+                  prefixIcon: Icon(Icons.email, color: Colors.white),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (String? value) {
@@ -335,9 +394,18 @@ class _RegisterCardState extends State<RegisterCard> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                style: const TextStyle(color: Colors.white),
+                cursorColor: Colors.white,
                 decoration: const InputDecoration(
                   labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock),
+                  labelStyle: TextStyle(color: Colors.white),
+                  prefixIcon: Icon(Icons.lock, color: Colors.white),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
                 ),
                 obscureText: true,
                 validator: (String? value) {
@@ -355,6 +423,10 @@ class _RegisterCardState extends State<RegisterCard> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFFE75A7C), // pink background
+                  foregroundColor: Colors.white,     // white text
+                ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
@@ -374,6 +446,7 @@ class _RegisterCardState extends State<RegisterCard> {
   }
 }
 
+
 /// The main application screen displayed after successful authentication.
 class MainScreen extends StatelessWidget {
   final String? username;
@@ -388,10 +461,15 @@ class MainScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ScreenBuddy Home'),
-        automaticallyImplyLeading: false,
+        backgroundColor: const Color(0xFF2b343d),
+        title: const Text('ScreenBuddy Home', style: TextStyle(
+          color: Color(0xFFE75A7C),
+          fontFamily: 'Fredoka',
+          fontWeight: FontWeight.w400,
+        ), // text color and font
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.assignment),
+          icon: const Icon(Icons.assignment, color: Color(0xFFE75A7C)),
           tooltip: 'Goals',
           onPressed: () {
             Navigator.of(context).push(
@@ -403,7 +481,7 @@ class MainScreen extends StatelessWidget {
         ),
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.analytics),
+            icon: const Icon(Icons.analytics, color: Color(0xFFE75A7C)),
             tooltip: 'Statistics',
             onPressed: () {
               Navigator.of(context).push(
@@ -414,7 +492,7 @@ class MainScreen extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.shopping_bag),
+            icon: const Icon(Icons.shopping_bag, color: Color(0xFFE75A7C)),
             tooltip: 'Shop',
             onPressed: () {
               Navigator.of(context).push(
@@ -425,7 +503,7 @@ class MainScreen extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Color(0xFFE75A7C)),
             tooltip: 'Logout',
             onPressed: () {
               authModel.resetState();
@@ -445,7 +523,10 @@ class MainScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               username != null ? 'Hello, $username!' : 'Hello!',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(            fontSize: 28,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Fredoka',
+              color: Color(0xFFE75A7C)),
             ),
             const Spacer(flex: 2),
             // Arbitrary values in the bottom third
@@ -459,11 +540,15 @@ class MainScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const <Widget>[
-                      Text('Level:', style: TextStyle(fontSize: 18)),
+                      Text('Level:', style: TextStyle(
+                        fontSize: 20,
+                        color: Color.fromARGB(255, 255, 255, 255),
+                      )),
                       Text(
                         '10',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 20,
+                          color: Color.fromARGB(255, 255, 255, 255),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -473,11 +558,15 @@ class MainScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const <Widget>[
-                      Text('Coins:', style: TextStyle(fontSize: 18)),
+                      Text('Coins:', style: TextStyle(
+                          fontSize: 20,
+                          color: Color.fromARGB(255, 255, 255, 255),
+                      )),
                       Text(
                         '500',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 20,
+                          color: Color.fromARGB(255, 255, 255, 255),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -487,11 +576,15 @@ class MainScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const <Widget>[
-                      Text('Last Login:', style: TextStyle(fontSize: 18)),
+                      Text('Last Login:', style: TextStyle(                          
+                        fontSize: 20,
+                          color: Color.fromARGB(255, 255, 255, 255),
+                      )),
                       Text(
                         'Today',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 20,
+                          color: Color.fromARGB(255, 255, 255, 255),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -534,82 +627,128 @@ class _GoalsPageState extends State<GoalsPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Set Your Goals'),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.analytics),
-            tooltip: 'Statistics',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (BuildContext context) => const StatsPage(),
-                ),
-              );
-            },
-          ),
-        ],
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: const Color(0xFF2b343d),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Color(0xFFE75A7C)),
+        tooltip: 'Back',
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            const Text(
-              'Select a Goal:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _selectedGoal,
-              decoration: const InputDecoration(
-                labelText: 'Goal',
-                border: OutlineInputBorder(),
-              ),
-              items: _availableGoals.map<DropdownMenuItem<String>>((
-                String goal,
-              ) {
-                return DropdownMenuItem<String>(value: goal, child: Text(goal));
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedGoal = newValue;
-                });
-              },
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () {
-                if (_selectedGoal != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Goal "$_selectedGoal" set successfully!'),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Set Goal'),
-            ),
-            const Spacer(),
-            const Text(
-              'Current Goal:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _selectedGoal ?? 'No goal selected',
-              style: const TextStyle(fontSize: 20),
-            ),
-            const Spacer(flex: 2),
-          ],
+      title: const Text(
+        'Set Your Goals',
+        style: TextStyle(
+          color: Color(0xFFE75A7C),
+          fontFamily: 'Fredoka',
+          fontWeight: FontWeight.w400,
         ),
       ),
-    );
-  }
+      actions: <Widget>[
+        IconButton(
+          icon: const Icon(Icons.analytics, color: Color(0xFFE75A7C)),
+          tooltip: 'Statistics',
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (BuildContext context) => const StatsPage(),
+              ),
+            );
+          },
+        ),
+      ],
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          const Text(
+            'Select a Goal:',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Fredoka',
+              color: Color(0xFFE75A7C),
+            ),
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            style: const TextStyle(color: Colors.white),
+            dropdownColor: Color(0xFF2b343d),
+            value: _selectedGoal,
+            decoration: const InputDecoration(
+              labelText: 'Goal',
+              labelStyle: TextStyle(color: Colors.white),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+            ),
+            items: _availableGoals.map<DropdownMenuItem<String>>((
+              String goal,
+            ) {
+              return DropdownMenuItem<String>(
+                value: goal,
+                child: Text(goal, style: const TextStyle(color: Colors.white)),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedGoal = newValue;
+              });
+            },
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {
+              if (_selectedGoal != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Goal "$_selectedGoal" set successfully!'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE75A7C), // pink background
+              foregroundColor: Colors.white, // white text
+            ),
+            child: const Text('Set Goal'),
+          ),
+          const Spacer(),
+          const Text(
+            'Current Goal:',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Fredoka',
+              color: Color(0xFFE75A7C),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _selectedGoal ?? 'No goal selected',
+            style: const TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+              fontFamily: 'Fredoka',
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          const Spacer(flex: 2),
+        ],
+      ),
+    ),
+  );
+}
+
 }
 
 /// A widget that displays a grid of shop items.
@@ -634,6 +773,7 @@ class _ShopItemGrid extends StatelessWidget {
 
         return Card(
           elevation: 4.0,
+          color: isAd ? StatsPage.darkCard : const Color(0xFF2b343d),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
           ),
@@ -669,7 +809,7 @@ class _ShopItemGrid extends StatelessWidget {
                         ? Icon(
                             item['iconData'] as IconData,
                             size: 60,
-                            color: Theme.of(context).primaryColor,
+                            color: StatsPage.pinkColor,
                           )
                         : Image.network(
                             item['image']! as String,
@@ -710,6 +850,7 @@ class _ShopItemGrid extends StatelessWidget {
                     item['name']! as String,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -724,7 +865,7 @@ class _ShopItemGrid extends StatelessWidget {
                         ? item['actionText']! as String
                         : item['price']! as String,
                     style: TextStyle(
-                      color: Theme.of(context).primaryColor,
+                      color: StatsPage.pinkColor,
                       fontSize: 14,
                     ),
                   ),
@@ -833,16 +974,43 @@ class _ShopPageState extends State<ShopPage>
     super.dispose();
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shop'),
+        backgroundColor: const Color(0xFF2b343d),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFE75A7C)),
+          tooltip: 'Back',
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        title: const Text(
+          'Shop',
+          style: TextStyle(
+            color: Color(0xFFE75A7C),
+            fontFamily: 'Fredoka',
+            fontWeight: FontWeight.w400,
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: const Color(0xFFE75A7C),
+          labelColor: const Color(0xFFE75A7C),
+          unselectedLabelColor: const Color.fromARGB(179, 255, 255, 255),
+          labelStyle: const TextStyle(
+            fontFamily: 'Fredoka',
+          ),
           tabs: const <Tab>[
-            Tab(text: 'Coins Shop', icon: Icon(Icons.monetization_on)),
-            Tab(text: 'Premium Shop', icon: Icon(Icons.workspace_premium)),
+            Tab(
+              text: 'Coins Shop',
+              icon: Icon(Icons.monetization_on, color: Color(0xFFE75A7C)),
+            ),
+            Tab(
+              text: 'Premium Shop',
+              icon: Icon(Icons.workspace_premium, color: Color(0xFFE75A7C)),
+            ),
           ],
         ),
       ),
@@ -867,18 +1035,43 @@ class _ShopPageState extends State<ShopPage>
 class StatsPage extends StatelessWidget {
   const StatsPage({super.key});
 
+  static const Color pinkColor = Color(0xFFE75A7C);
+  static const Color darkCard = Color(0xFF2b343d);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Your Statistics')),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF2b343d),
+        title: const Text(
+          'Your Statistics',
+          style: TextStyle(
+            color: pinkColor,
+            fontFamily: 'Fredoka',
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: pinkColor),
+          tooltip: 'Back',
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
+            const Text(
               'Goals Progress',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Fredoka',
+                color: pinkColor,
+              ),
             ),
             const SizedBox(height: 16),
             _buildStatCard(
@@ -890,9 +1083,14 @@ class StatsPage extends StatelessWidget {
               description: 'Progress on your last 5 goals.',
             ),
             const SizedBox(height: 24),
-            Text(
+            const Text(
               'Coin Economy',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Fredoka',
+                color: pinkColor,
+              ),
             ),
             const SizedBox(height: 16),
             _buildStatCard(
@@ -916,14 +1114,11 @@ class StatsPage extends StatelessWidget {
               title: 'Coins Spent',
               value: '1800',
               icon: Icons.shopping_cart,
-              chart: _buildLineChart(context, <double>[
-                50,
-                80,
-                60,
-                100,
-                90,
-                70,
-              ], color: Colors.red),
+              chart: _buildLineChart(
+                context,
+                <double>[50, 80, 60, 100, 90, 70],
+                color: pinkColor,
+              ),
               description: 'Coins spent on items.',
             ),
           ],
@@ -933,44 +1128,65 @@ class StatsPage extends StatelessWidget {
   }
 
   Widget _buildStatCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required IconData icon,
-    required Widget chart,
-    required String description,
-  }) {
-    return Card(
-      elevation: 4.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Icon(icon, size: 30, color: Theme.of(context).primaryColor),
-                const SizedBox(width: 10),
-                Text(title, style: Theme.of(context).textTheme.titleLarge),
-                const Spacer(),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(height: 100, width: double.infinity, child: chart),
-            const SizedBox(height: 10),
-            Text(description, style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
+  BuildContext context, {
+  required String title,
+  required String value,
+  required IconData icon,
+  required Widget chart,
+  required String description,
+}) {
+  return Card(
+    color: Color(0xFF2b343d),
+    elevation: 4.0,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+    child: Padding(
+      padding: EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(icon, size: 30, color: Color(0xFFE75A7C)), // pink icon
+              SizedBox(width: 10),
+              Text(
+                title,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(color: Color.fromARGB(255, 255, 255, 255)),
+              ),
+              Spacer(),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          Container(
+            height: 100,
+            width: double.infinity,
+            padding: EdgeInsets.all(8),
+            // No separate background here anymore because card is colored
+            child: chart,
+          ),
+          SizedBox(height: 10),
+          Text(
+            description,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: Colors.white),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildBarChart(BuildContext context, List<double> data) {
     return Row(
@@ -979,10 +1195,11 @@ class StatsPage extends StatelessWidget {
       children: data.map<Widget>((double value) {
         return Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            padding: EdgeInsets.symmetric(horizontal: 4.0),
             child: Container(
               height: value * 100, // Scale to max height of 100
-              color: Theme.of(context).primaryColor.withOpacity(0.7),
+              // ignore: deprecated_member_use
+              color: Color(0xFFE75A7C).withOpacity(0.8), // pink bars
             ),
           ),
         );
@@ -1003,7 +1220,7 @@ class StatsPage extends StatelessWidget {
     return CustomPaint(
       painter: _LineChartPainter(
         data.map((double e) => e * scale).toList(),
-        Theme.of(context).primaryColor,
+        color ?? Color(0xFFE75A7C), // default pink line color if none passed
       ),
       child: Container(),
     );
