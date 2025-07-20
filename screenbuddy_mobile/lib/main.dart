@@ -515,11 +515,22 @@ class MainScreen extends StatelessWidget {
         child: Column(
           children: <Widget>[
             const Spacer(),
-            CircleAvatar(
-              radius: 60,
-              backgroundImage: const NetworkImage(_placeholderImageUrl),
-              backgroundColor: Colors.transparent, // In case image fails
-            ),
+Container(
+  width: 250,
+  height: 250,
+  decoration: BoxDecoration(
+    color: const Color(0xFF2b343d), // background color
+
+    borderRadius: BorderRadius.circular(20.0), // rounded corners
+  ),
+  child: ClipRect(
+    child: Image.asset(
+      'assets/buddies/circleBlue.png',
+        filterQuality: FilterQuality.high,
+      fit: BoxFit.contain,
+    ),
+  ),
+),
             const SizedBox(height: 16),
             Text(
               username != null ? 'Hello, $username!' : 'Hello!',
