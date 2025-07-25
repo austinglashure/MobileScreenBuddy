@@ -91,7 +91,7 @@ class AppState {
 
   final List<AvatarItem> owned = [
     AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleRed.png',
+      assetPath: 'buddies/triangle/triangleRed.png',
       name: "Buddy",
       id: 0,
     ),
@@ -99,20 +99,20 @@ class AppState {
 
   final List<AvatarItem> shop = [
     AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleGreen.png',
+      assetPath: 'buddies/triangle/triangleGreen.png',
       name: "Green Buddy",
       id: 1,
       price: 50,
     ),
     AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleBlue.png',
+      assetPath: 'buddies/triangle/triangleBlue.png',
       name: "Blue Buddy",
       id: 2,
       price: 75,
     ),
     AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleYellow.png',
-      name: "Yellow Buddy",
+      assetPath: 'buddies/triangle/triangleOrange.png',
+      name: "Orange Buddy",
       id: 3,
       price: 100,
     ),
