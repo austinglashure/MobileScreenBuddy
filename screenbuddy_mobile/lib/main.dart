@@ -210,28 +210,49 @@ class _AuthScreenState extends State<AuthScreen> {
     return List.generate(6, (_) => rand.nextInt(10)).join();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Welcome to ScreenBuddy',
-          style: const TextStyle(
-            color: kAccent,
-            fontFamily: kFont,
-            fontWeight: FontWeight.w400,
-          ),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text(
+        'Welcome to ScreenBuddy',
+        style: const TextStyle(
+          color: kAccent,
+          fontFamily: kFont,
+          fontWeight: FontWeight.w400,
         ),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Form(
+    ),
+    body: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const SizedBox(height: 10),
+
+              // Login/Register title
+              Text(
+                showLogin ? 'Welcome Back!' : 'Sign Up!',
+                style: const TextStyle(
+                  color: kAccent,
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: kFont,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Dark background container around form
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Form(
                   key: _formKey,
                   child: Column(
                     children: [
@@ -263,26 +284,28 @@ class _AuthScreenState extends State<AuthScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => setState(() => showLogin = !showLogin),
-                  child: Text(
-                    showLogin
-                        ? "Don't have an account? Register"
-                        : "Have an account? Login",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontFamily: kFont,
-                    ),
+              ),
+
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => setState(() => showLogin = !showLogin),
+                child: Text(
+                  showLogin
+                      ? "Don't have an account? Register"
+                      : "Have an account? Login",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: kFont,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 /* ========================= VERIFY PIN SCREEN =========================== */
@@ -352,8 +375,9 @@ class _VerifyPinScreenState extends State<VerifyPinScreen> {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                const SizedBox(height: 85),
                 Text(
                   "Enter the 6-digit code sent to\n${widget.email}",
                   textAlign: TextAlign.center,
@@ -465,33 +489,39 @@ class _MainViewState extends State<MainView> {
             ),
           ),
           Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: kDarkSurface,
-                    borderRadius: BorderRadius.circular(20.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.4),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+            child: Transform.translate(
+              offset: const Offset(0, -110),
+              child: Column(
+                
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: kDarkSurface,
+                      borderRadius: BorderRadius.circular(20.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(24),
+                    child: CircleAvatar(
+                      radius: 70,
+                      backgroundColor: Colors.black12,
+                      backgroundImage: AssetImage(equipped.assetPath),
+                    ),
                   ),
-                  padding: const EdgeInsets.all(24),
-                  child: CircleAvatar(
-                    radius: 70,
-                    backgroundColor: Colors.black12,
-                    backgroundImage: AssetImage(equipped.assetPath),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(equipped.name, style: titleStyle),
-              ],
+                  const SizedBox(height: 12),
+                  Text(equipped.name, style: titleStyle),
+                ],
+              ),
             ),
           ),
+
           Positioned(
             left: 0,
             right: 0,
@@ -842,8 +872,9 @@ class _ShopViewState extends State<ShopView> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 85),
                     Image.asset(item.assetPath, width: 48, height: 48),
                     const SizedBox(height: 12),
                     Text(
