@@ -125,7 +125,7 @@ class AppState {
 
   final List<int> dailyMinutes = List.generate(
     7,
-    (_) => 30 + Random().nextInt(120),
+    (_) => 90 + Random().nextInt(120),
   );
   final List<int> goalsMetPerWeek = List.generate(
     6,
@@ -790,8 +790,8 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
                 painter: LineChartPainter(widget.state.dailyMinutes),
                 child: const Center(
                   child: Text(
-                    "Daily Screentime (min)",
-                    style: TextStyle(color: Colors.white),
+                    "User Screen Time (mins)",
+                    style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
                   ),
                 ),
               ),
@@ -916,6 +916,12 @@ class _ShopViewState extends State<ShopView> {
 
 class LineChartPainter extends CustomPainter {
   final List<int> data;
+
+  // 5 hours and 16 minutes is the average for all Americans (316 mins)
+  final List<int> averageDailyMinutes = List.generate(7, (_) => 316);
+  // 2 hours is the limit on "healthy" usage according to Psychologists (120 mins)
+  final List<int> healthyDailyMinutes = List.generate(7, (_) => 120);
+
   LineChartPainter(this.data);
 
   @override
@@ -924,13 +930,28 @@ class LineChartPainter extends CustomPainter {
     final chartWidth = size.width - padding * 2;
     final chartHeight = size.height - padding * 2;
 
+    /*-------------------Paint Colors-------------------------------------*/
+
     final axisPaint = Paint()
       ..color = Colors.white54
       ..strokeWidth = 1;
-    final linePaint = Paint()
-      ..color = kAccent
+
+    final averageMinutesColor = Paint()
+      ..color = const Color.fromARGB(255, 255, 0, 0)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
+
+    final healthyMinutesColor = Paint()
+      ..color = const Color.fromARGB(255, 72, 255, 0)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    final userMinutesColor = Paint()
+      ..color = const Color.fromARGB(255, 0, 0, 0)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    /*---------------------Draw Empty Graph-------------------------------*/
 
     canvas.drawLine(
       Offset(padding, size.height - padding),
@@ -943,22 +964,64 @@ class LineChartPainter extends CustomPainter {
       axisPaint,
     );
 
+    /*--------------------Determining the bounds---------------------------*/
+
+    final defaultMaxVal = 600.0;
+
+    final double maxVal = data.isNotEmpty
+        ? max(defaultMaxVal, data.reduce(max).toDouble())
+        : defaultMaxVal;
+
+    final dx = chartWidth / (averageDailyMinutes.length - 1);
+
+    /*-----------------------Drawing the Default Lines---------------------*/
+
+    final averageMinutesPath = Path();
+    for (int i = 0; i < averageDailyMinutes.length; i++) {
+      final x = padding + i * dx;
+      final y =
+          size.height -
+          padding -
+          (averageDailyMinutes[i] / maxVal) * chartHeight;
+      if (i == 0) {
+        averageMinutesPath.moveTo(x, y);
+      } else {
+        averageMinutesPath.lineTo(x, y);
+      }
+    }
+
+    final healthyMinutesPath = Path();
+    for (int i = 0; i < healthyDailyMinutes.length; i++) {
+      final x = padding + i * dx;
+      final y =
+          size.height -
+          padding -
+          (healthyDailyMinutes[i] / maxVal) * chartHeight;
+      if (i == 0) {
+        healthyMinutesPath.moveTo(x, y);
+      } else {
+        healthyMinutesPath.lineTo(x, y);
+      }
+    }
+
+    canvas.drawPath(averageMinutesPath, userMinutesColor);
+    canvas.drawPath(healthyMinutesPath, userMinutesColor);
+
     if (data.isEmpty) return;
 
-    final maxVal = data.reduce(max).toDouble();
-    final dx = chartWidth / (data.length - 1);
+    /*------------------Drawing User Data Line-----------------------------*/
 
-    final path = Path();
+    final userMinutesPath = Path();
     for (int i = 0; i < data.length; i++) {
       final x = padding + i * dx;
       final y = size.height - padding - (data[i] / maxVal) * chartHeight;
       if (i == 0) {
-        path.moveTo(x, y);
+        userMinutesPath.moveTo(x, y);
       } else {
-        path.lineTo(x, y);
+        userMinutesPath.lineTo(x, y);
       }
     }
-    canvas.drawPath(path, linePaint);
+    canvas.drawPath(userMinutesPath, userMinutesColor);
   }
 
   @override
