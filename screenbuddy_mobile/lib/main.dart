@@ -1004,8 +1004,8 @@ class LineChartPainter extends CustomPainter {
       }
     }
 
-    canvas.drawPath(averageMinutesPath, userMinutesColor);
-    canvas.drawPath(healthyMinutesPath, userMinutesColor);
+    canvas.drawPath(averageMinutesPath, averageMinutesColor);
+    canvas.drawPath(healthyMinutesPath, healthyMinutesColor);
 
     if (data.isEmpty) return;
 
