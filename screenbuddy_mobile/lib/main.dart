@@ -1,94 +1,66 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-/// Defines the current authentication mode for the application.
-enum AuthMode {
-  /// Represents the login view.
-  login,
+void main() => runApp(MyApp());
 
-  /// Represents the registration view.
-  register,
-}
+/* ========================== THEME & CONSTANTS ========================== */
 
-/// The data model for authentication, managing the current authentication mode
-/// and post-action success messages.
-class AuthModel extends ChangeNotifier {
-  AuthMode _authMode;
-  String? _successMessage;
-  bool _isAuthenticated;
-  String? _loggedInUsername;
+const kDarkSurface = Color(0xFF2b343d);
+const kScaffold = Color(0xFF34404B);
+const kAccent = Color(0xFFE75A7C);
+const kFont = 'Fredoka';
 
-  /// Gets the current authentication mode.
-  AuthMode get authMode => _authMode;
+TextStyle titleStyle = const TextStyle(
+  fontFamily: kFont,
+  fontWeight: FontWeight.bold,
+  fontSize: 22,
+  color: kAccent,
+);
+TextStyle buttonTextStyle = const TextStyle(
+  fontFamily: kFont,
+  fontWeight: FontWeight.bold,
+  fontSize: 16,
+  color: Colors.white,
+);
+TextStyle bodyWhite = const TextStyle(
+  fontFamily: kFont,
+  fontWeight: FontWeight.w400,
+  fontSize: 14,
+  color: Colors.white,
+);
 
-  /// Gets the success message after a login or registration action.
-  String? get successMessage => _successMessage;
-
-  /// Checks if a user is currently authenticated.
-  bool get isAuthenticated => _isAuthenticated;
-
-  /// Gets the username of the currently logged-in user.
-  String? get loggedInUsername => _loggedInUsername;
-
-  /// Initializes the AuthModel.
-  AuthModel()
-    : _authMode = AuthMode.login,
-      _isAuthenticated = false,
-      _loggedInUsername = null,
-      _successMessage = null;
-
-  /// Toggles the authentication mode between login and register.
-  void toggleAuthMode() {
-    _authMode = _authMode == AuthMode.login
-        ? AuthMode.register
-        : AuthMode.login;
-    notifyListeners();
-  }
-
-  /// Simulates a login operation and sets authentication state.
-  void login(String username) {
-    _isAuthenticated = true;
-    _loggedInUsername = username;
-    _successMessage = 'Welcome $username!';
-    notifyListeners();
-  }
-
-  /// Simulates a registration operation and sets authentication state.
-  void register(String username, String email) {
-    _isAuthenticated = true;
-    _loggedInUsername =
-        username; // Log in the user after successful registration
-    _successMessage = 'Check your email ($email) for verification!';
-    notifyListeners();
-  }
-
-  /// Resets the authentication state, clearing any success messages and
-  /// returning to the login view.
-  void resetState() {
-    _successMessage = null;
-    _authMode = AuthMode.login;
-    _isAuthenticated = false;
-    _loggedInUsername = null;
-    notifyListeners();
-  }
-}
-
-/// The root widget of the application.
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final AppState state = AppState();
+  MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ScreenBuddy',
+      title: 'ScreenBuddy Demo',
       theme: ThemeData(
-        textSelectionTheme: const TextSelectionThemeData(
-          selectionColor: Color(0xFFE75A7C), // background when text is selected
-          selectionHandleColor: Color(0xFFE75A7C), // drag handles
+        scaffoldBackgroundColor: kScaffold,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: kAccent,
+          primary: kAccent,
+          secondary: kAccent,
+          brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: const Color(0xFF34404B), // Set background color
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        textSelectionTheme: const TextSelectionThemeData(
+          selectionColor: kAccent,
+          selectionHandleColor: kAccent,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: kDarkSurface,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          titleTextStyle: TextStyle(
+            fontFamily: kFont,
+            fontWeight: FontWeight.w400,
+            fontSize: 20,
+            color: kAccent,
+          ),
+          iconTheme: IconThemeData(color: Colors.white),
+        ),
         inputDecorationTheme: const InputDecorationTheme(
           border: OutlineInputBorder(),
           floatingLabelBehavior: FloatingLabelBehavior.auto,
@@ -96,1183 +68,959 @@ class MyApp extends StatelessWidget {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.0),
+            backgroundColor: kAccent,
+            foregroundColor: Colors.white,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
             ),
+            textStyle: buttonTextStyle,
           ),
         ),
       ),
-      home: ChangeNotifierProvider<AuthModel>(
-        create: (BuildContext context) => AuthModel(),
-        builder: (BuildContext context, Widget? child) => const AuthWrapper(),
-      ),
+      home: AuthScreen(state: state),
     );
   }
 }
 
+/* =============================== STATE ================================= */
 
-/// A wrapper widget that decides which screen to display based on the
-/// authentication model's state (AuthScreen or MainScreen).
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
+class AppState {
+  bool loggedIn = false;
+  int coins = 150;
+  String? pendingEmailCode;
 
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthModel>(
-      builder: (BuildContext context, AuthModel authModel, Widget? child) {
-        if (authModel.isAuthenticated) {
-          return MainScreen(username: authModel.loggedInUsername);
-        } else {
-          return const AuthScreen();
-        }
-      },
-    );
-  }
-}
-
-/// The main screen for authentication, allowing users to switch between
-/// login and registration forms.
-class AuthScreen extends StatelessWidget {
-  const AuthScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text(
-    'Welcome to ScreenBuddy',
-          style: TextStyle(color: Color(0xFFE75A7C), fontFamily: 'Fredoka', fontWeight: FontWeight.w400),
-            // text color
-        ),
-        backgroundColor: Color(0xFF2b343d),  // background color of the bar
-      ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Consumer<AuthModel>(
-              builder:
-                  (BuildContext context, AuthModel authModel, Widget? child) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        const SizedBox(height: 20),
-                        authModel.authMode == AuthMode.login
-                            ? const LoginCard()
-                            : const RegisterCard(),
-                        const SizedBox(height: 20),
-                        TextButton(
-                          onPressed: () {
-                            authModel.toggleAuthMode();
-                          },
-                          child: Text(
-                            authModel.authMode == AuthMode.login
-                                ? 'Don\'t have an account? Register'
-                                : 'Already have an account? Login',
-                            style: TextStyle(
-                              color: Color(0xFFE75A7C),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A card widget containing the login form.
-class LoginCard extends StatefulWidget {
-  const LoginCard({super.key});
-
-  @override
-  State<LoginCard> createState() => _LoginCardState();
-}
-
-class _LoginCardState extends State<LoginCard> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  String _username = '';
-  String _password = '';
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: const Color(0xFF2b343d),
-      elevation: 8.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              const Text(
-                'Login',
-                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w400, fontFamily: 'Fredoka', color: Color(0xFFE75A7C)),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                cursorColor: Colors.white,
-                decoration: const InputDecoration(  
-                  labelText: 'Username',
-                  labelStyle: TextStyle(color: Colors.white), // label color
-                  prefixIcon: Icon(Icons.person, color: Colors.white), // icon color
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your username.';
-                  }
-                  if (value.length < 3) {
-                    return 'Username must be at least 3 characters.';
-                  }
-                  return null;
-                },
-                onSaved: (String? value) {
-                  _username = value!;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                  style: const TextStyle(color: Colors.white),
-                  cursorColor: Colors.white,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    labelStyle: TextStyle(color: Colors.white), // label color
-                    prefixIcon: Icon(Icons.lock, color: Colors.white), // icon color
-                                      enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  obscureText: true,
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password.';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters.';
-                    }
-                    return null;
-                  },
-                  onSaved: (String? value) {
-                    _password = value!;
-                  },
-                ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFE75A7C), // pink background
-                  foregroundColor: Colors.white,     // white text
-                ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    Provider.of<AuthModel>(
-                      context,
-                      listen: false,
-                    ).login(_username);
-                  }
-                },
-                child: const Text('Login'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A card widget containing the registration form.
-class RegisterCard extends StatefulWidget {
-  const RegisterCard({super.key});
-
-  @override
-  State<RegisterCard> createState() => _RegisterCardState();
-}
-
-class _RegisterCardState extends State<RegisterCard> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  String _username = '';
-  String _email = '';
-  String _password = '';
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: const Color(0xFF2b343d),
-      elevation: 8.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              const Text(
-                'Register',
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: 'Fredoka',
-                  color: Color(0xFFE75A7C),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                cursorColor: Colors.white,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
-                  labelStyle: TextStyle(color: Colors.white),
-                  prefixIcon: Icon(Icons.person, color: Colors.white),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a username.';
-                  }
-                  if (value.length < 3) {
-                    return 'Username must be at least 3 characters.';
-                  }
-                  if (value == "alas1") {
-                    return 'Username "alas1" already taken';
-                  }
-                  return null;
-                },
-                onSaved: (String? value) {
-                  _username = value!;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                cursorColor: Colors.white,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  labelStyle: TextStyle(color: Colors.white),
-                  prefixIcon: Icon(Icons.email, color: Colors.white),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email.';
-                  }
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Please enter a valid email address.';
-                  }
-                  return null;
-                },
-                onSaved: (String? value) {
-                  _email = value!;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                cursorColor: Colors.white,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  labelStyle: TextStyle(color: Colors.white),
-                  prefixIcon: Icon(Icons.lock, color: Colors.white),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-                obscureText: true,
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a password.';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters.';
-                  }
-                  return null;
-                },
-                onSaved: (String? value) {
-                  _password = value!;
-                },
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFE75A7C), // pink background
-                  foregroundColor: Colors.white,     // white text
-                ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    Provider.of<AuthModel>(
-                      context,
-                      listen: false,
-                    ).register(_username, _email);
-                  }
-                },
-                child: const Text('Register'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-/// The main application screen displayed after successful authentication.
-class MainScreen extends StatelessWidget {
-  final String? username;
-  const MainScreen({super.key, this.username});
-
-  static const String _placeholderImageUrl =
-      'https://www.gstatic.com/flutter-onestack-prototype/genui/example_1.jpg';
-
-  @override
-  Widget build(BuildContext context) {
-    final AuthModel authModel = Provider.of<AuthModel>(context, listen: false);
-
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2b343d),
-        title: const Text('ScreenBuddy Home', style: TextStyle(
-          color: Color(0xFFE75A7C),
-          fontFamily: 'Fredoka',
-          fontWeight: FontWeight.w400,
-        ), // text color and font
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.assignment, color: Color(0xFFE75A7C)),
-          tooltip: 'Goals',
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (BuildContext context) => const GoalsPage(),
-              ),
-            );
-          },
-        ),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.analytics, color: Color(0xFFE75A7C)),
-            tooltip: 'Statistics',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (BuildContext context) => const StatsPage(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_bag, color: Color(0xFFE75A7C)),
-            tooltip: 'Shop',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (BuildContext context) => const ShopPage(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Color(0xFFE75A7C)),
-            tooltip: 'Logout',
-            onPressed: () {
-              authModel.resetState();
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          children: <Widget>[
-            const Spacer(),
-Container(
-  width: 250,
-  height: 250,
-  decoration: BoxDecoration(
-    color: const Color(0xFF2b343d), // background color
-
-    borderRadius: BorderRadius.circular(20.0), // rounded corners
-  ),
-  child: ClipRect(
-    child: Image.asset(
-      'assets/buddies/circleBlue.png',
-        filterQuality: FilterQuality.high,
-      fit: BoxFit.contain,
+  final List<AvatarItem> owned = [
+    AvatarItem(
+      assetPath: 'assets/buddies/triangle/triangleRed.png',
+      name: "Buddy",
+      id: 0,
     ),
-  ),
-),
-            const SizedBox(height: 16),
-            Text(
-              username != null ? 'Hello, $username!' : 'Hello!',
-              style: const TextStyle(            fontSize: 28,
-              fontWeight: FontWeight.w400,
-              fontFamily: 'Fredoka',
-              color: Color(0xFFE75A7C)),
-            ),
-            const Spacer(flex: 2),
-            // Arbitrary values in the bottom third
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 16.0,
-              ),
-              child: Column(
-                children: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const <Widget>[
-                      Text('Level:', style: TextStyle(
-                        fontSize: 20,
-                        color: Color.fromARGB(255, 255, 255, 255),
-                      )),
-                      Text(
-                        '10',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Color.fromARGB(255, 255, 255, 255),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const <Widget>[
-                      Text('Coins:', style: TextStyle(
-                          fontSize: 20,
-                          color: Color.fromARGB(255, 255, 255, 255),
-                      )),
-                      Text(
-                        '500',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Color.fromARGB(255, 255, 255, 255),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const <Widget>[
-                      Text('Last Login:', style: TextStyle(                          
-                        fontSize: 20,
-                          color: Color.fromARGB(255, 255, 255, 255),
-                      )),
-                      Text(
-                        'Today',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Color.fromARGB(255, 255, 255, 255),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A page for setting and viewing goals.
-class GoalsPage extends StatefulWidget {
-  const GoalsPage({super.key});
-
-  @override
-  State<GoalsPage> createState() => _GoalsPageState();
-}
-
-class _GoalsPageState extends State<GoalsPage> {
-  String? _selectedGoal;
-  final List<String> _availableGoals = <String>[
-    'Complete daily challenge',
-    'Achieve new rank',
-    'Collect 1000 coins',
-    'Customize avatar',
-    'Explore new area',
   ];
 
+  final List<AvatarItem> shop = [
+    AvatarItem(
+      assetPath: 'assets/buddies/triangle/triangleGreen.png',
+      name: "Green Buddy",
+      id: 1,
+      price: 50,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/triangle/triangleBlue.png',
+      name: "Blue Buddy",
+      id: 2,
+      price: 75,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/triangle/triangleOrange.png',
+      name: "Orange Buddy",
+      id: 3,
+      price: 100,
+    ),
+  ];
+
+  int equippedId = 0;
+
+  TimeOfDay start = const TimeOfDay(hour: 12, minute: 0);
+  TimeOfDay end = const TimeOfDay(hour: 12, minute: 0);
+
+  final List<int> dailyMinutes = List.generate(
+    7,
+    (_) => 30 + Random().nextInt(120),
+  );
+  final List<int> goalsMetPerWeek = List.generate(
+    6,
+    (_) => Random().nextInt(7),
+  );
+
+  void equip(int id) => equippedId = id;
+  AvatarItem byId(int id) => owned.firstWhere((e) => e.id == id);
+  bool buy(AvatarItem item) {
+    if (coins >= item.price && shop.contains(item)) {
+      coins -= item.price;
+      owned.add(item);
+      shop.remove(item);
+      return true;
+    }
+    return false;
+  }
+}
+
+class AvatarItem {
+  final String assetPath;
+  final String name;
+  final int id;
+  final int price;
+  AvatarItem({
+    required this.assetPath,
+    required this.name,
+    required this.id,
+    this.price = 0,
+  });
+}
+
+/* ============================ AUTH SCREEN ============================== */
+
+class AuthScreen extends StatefulWidget {
+  final AppState state;
+  const AuthScreen({super.key, required this.state});
   @override
-  void initState() {
-    super.initState();
-    if (_availableGoals.isNotEmpty) {
-      _selectedGoal = _availableGoals.first;
+  State<AuthScreen> createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends State<AuthScreen> {
+  bool showLogin = true;
+  final _formKey = GlobalKey<FormState>();
+  String email = "";
+  String password = "";
+
+  InputDecoration _fieldDec(String label, IconData icon) => InputDecoration(
+    labelText: label,
+    labelStyle: const TextStyle(color: Colors.white, fontFamily: kFont),
+    prefixIcon: Icon(icon, color: Colors.white),
+    enabledBorder: const OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.white),
+    ),
+    focusedBorder: const OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.white, width: 2),
+    ),
+  );
+
+  void _handleSubmit() {
+    _formKey.currentState?.save();
+    if (showLogin) {
+      widget.state.loggedIn = true;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => MainView(state: widget.state)),
+      );
+    } else {
+      widget.state.pendingEmailCode = _generateCode();
+      // TODO: API call to send widget.state.pendingEmailCode to the user's email
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyPinScreen(state: widget.state, email: email),
+        ),
+      );
     }
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      backgroundColor: const Color(0xFF2b343d),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Color(0xFFE75A7C)),
-        tooltip: 'Back',
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
-      ),
-      title: const Text(
-        'Set Your Goals',
-        style: TextStyle(
-          color: Color(0xFFE75A7C),
-          fontFamily: 'Fredoka',
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-      actions: <Widget>[
-        IconButton(
-          icon: const Icon(Icons.analytics, color: Color(0xFFE75A7C)),
-          tooltip: 'Statistics',
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (BuildContext context) => const StatsPage(),
-              ),
-            );
-          },
-        ),
-      ],
-    ),
-    body: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          const Text(
-            'Select a Goal:',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Fredoka',
-              color: Color(0xFFE75A7C),
-            ),
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            style: const TextStyle(color: Colors.white),
-            dropdownColor: Color(0xFF2b343d),
-            value: _selectedGoal,
-            decoration: const InputDecoration(
-              labelText: 'Goal',
-              labelStyle: TextStyle(color: Colors.white),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
-              ),
-            ),
-            items: _availableGoals.map<DropdownMenuItem<String>>((
-              String goal,
-            ) {
-              return DropdownMenuItem<String>(
-                value: goal,
-                child: Text(goal, style: const TextStyle(color: Colors.white)),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedGoal = newValue;
-              });
-            },
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () {
-              if (_selectedGoal != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Goal "$_selectedGoal" set successfully!'),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE75A7C), // pink background
-              foregroundColor: Colors.white, // white text
-            ),
-            child: const Text('Set Goal'),
-          ),
-          const Spacer(),
-          const Text(
-            'Current Goal:',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Fredoka',
-              color: Color(0xFFE75A7C),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _selectedGoal ?? 'No goal selected',
-            style: const TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-              fontFamily: 'Fredoka',
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-          const Spacer(flex: 2),
-        ],
-      ),
-    ),
-  );
-}
-
-}
-
-/// A widget that displays a grid of shop items.
-class _ShopItemGrid extends StatelessWidget {
-  final List<Map<String, dynamic>> items;
-
-  const _ShopItemGrid({required this.items});
+  String _generateCode() {
+    final rand = Random();
+    return List.generate(6, (_) => rand.nextInt(10)).join();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10.0,
-        mainAxisSpacing: 10.0,
-        childAspectRatio: 0.75, // Adjust as needed for card content
-      ),
-      itemCount: items.length,
-      itemBuilder: (BuildContext context, int index) {
-        final Map<String, dynamic> item = items[index];
-        final bool isAd = item['isAd'] == true;
-
-        return Card(
-          elevation: 4.0,
-          color: isAd ? StatsPage.darkCard : const Color(0xFF2b343d),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Welcome to ScreenBuddy',
+          style: const TextStyle(
+            color: kAccent,
+            fontFamily: kFont,
+            fontWeight: FontWeight.w400,
           ),
-          child: InkWell(
-            onTap: () {
-              if (isAd) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Watching ad... ${item['actionText'] as String}',
-                    ),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Attempting to buy ${item['name'] as String} for ${item['price'] as String}',
-                    ),
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
-              }
-            },
+        ),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: isAd
-                        ? Icon(
-                            item['iconData'] as IconData,
-                            size: 60,
-                            color: StatsPage.pinkColor,
-                          )
-                        : Image.network(
-                            item['image']! as String,
-                            fit: BoxFit.contain,
-                            loadingBuilder:
-                                (
-                                  BuildContext context,
-                                  Widget child,
-                                  ImageChunkEvent? loadingProgress,
-                                ) {
-                                  if (loadingProgress == null) return child;
-                                  return Center(
-                                    child: CircularProgressIndicator(
-                                      value:
-                                          loadingProgress
-                                              .cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!,
-                                    ),
-                                  );
-                                },
-                            errorBuilder:
-                                (
-                                  BuildContext context,
-                                  Object error,
-                                  StackTrace? stackTrace,
-                                ) {
-                                  return const Icon(
-                                    Icons.broken_image,
-                                    size: 50,
-                                  );
-                                },
-                          ),
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const SizedBox(height: 10),
+
+                // Login/Register title
+                Text(
+                  showLogin ? 'Welcome Back!' : 'Sign Up!',
+                  style: const TextStyle(
+                    color: kAccent,
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: kFont,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
+                const SizedBox(height: 24),
+
+                // Dark background container around form
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: kFont,
+                          ),
+                          cursorColor: Colors.white,
+                          decoration: _fieldDec('Email', Icons.person),
+                          onSaved: (v) => email = v ?? '',
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: kFont,
+                          ),
+                          cursorColor: Colors.white,
+                          obscureText: true,
+                          decoration: _fieldDec('Password', Icons.lock),
+                          onSaved: (v) => password = v ?? '',
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _handleSubmit,
+                          child: Text(showLogin ? 'Login' : 'Register'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => setState(() => showLogin = !showLogin),
                   child: Text(
-                    item['name']! as String,
-                    textAlign: TextAlign.center,
+                    showLogin
+                        ? "Don't have an account? Register"
+                        : "Have an account? Login",
                     style: const TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontFamily: kFont,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text(
-                    isAd
-                        ? item['actionText']! as String
-                        : item['price']! as String,
-                    style: TextStyle(
-                      color: StatsPage.pinkColor,
-                      fontSize: 14,
-                    ),
+
+                const SizedBox(height: 16),
+                Image.asset(
+                  'assets/buddies/triangle/triangleRed.png',
+                  width: 100.0,
+                  height: 100.0,
+                  fit: BoxFit.contain,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/* ========================= VERIFY PIN SCREEN =========================== */
+
+class VerifyPinScreen extends StatefulWidget {
+  final AppState state;
+  final String email;
+  const VerifyPinScreen({super.key, required this.state, required this.email});
+
+  @override
+  State<VerifyPinScreen> createState() => _VerifyPinScreenState();
+}
+
+class _VerifyPinScreenState extends State<VerifyPinScreen> {
+  final _pinController = TextEditingController();
+
+  InputDecoration _pinDec() => const InputDecoration(
+    labelText: '6-digit Code',
+    labelStyle: TextStyle(color: Colors.white, fontFamily: kFont),
+    prefixIcon: Icon(Icons.lock_open, color: Colors.white),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.white),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.white, width: 2),
+    ),
+  );
+
+  void _verify() {
+    if (_pinController.text == widget.state.pendingEmailCode) {
+      widget.state.loggedIn = true;
+      widget.state.pendingEmailCode = null;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => MainView(state: widget.state)),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Invalid code. Try again.")));
+    }
+  }
+
+  void _resend() {
+    widget.state.pendingEmailCode = _generateCode();
+    // TODO: API call to re-send code to widget.email
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Verification code re-sent.")));
+  }
+
+  String _generateCode() {
+    final rand = Random();
+    return List.generate(6, (_) => rand.nextInt(10)).join();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Email Verification"),
+        automaticallyImplyLeading: false,
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const SizedBox(height: 85),
+                Text(
+                  "Enter the 6-digit code sent to\n${widget.email}",
+                  textAlign: TextAlign.center,
+                  style: bodyWhite.copyWith(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: _pinController,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: kFont,
+                    letterSpacing: 4,
+                  ),
+                  maxLength: 6,
+                  keyboardType: TextInputType.number,
+                  cursorColor: Colors.white,
+                  decoration: _pinDec(),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton(onPressed: _verify, child: const Text("Verify")),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: _resend,
+                  child: const Text(
+                    "Resend Code",
+                    style: TextStyle(color: Colors.white, fontFamily: kFont),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AuthScreen(state: widget.state),
+                      ),
+                      (_) => false,
+                    );
+                  },
+                  child: const Text(
+                    "Back to Login/Register",
+                    style: TextStyle(color: Colors.white, fontFamily: kFont),
                   ),
                 ),
               ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
 
-/// A page simulating an in-app shop with different sections.
-class ShopPage extends StatefulWidget {
-  const ShopPage({super.key});
+/* ============================== MAIN VIEW ============================== */
 
+class MainView extends StatefulWidget {
+  final AppState state;
+  const MainView({super.key, required this.state});
   @override
-  State<ShopPage> createState() => _ShopPageState();
+  State<MainView> createState() => _MainViewState();
 }
 
-class _ShopPageState extends State<ShopPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _MainViewState extends State<MainView> {
+  int? selectedInventoryId;
 
-  static const String _placeholderItemImageUrl =
-      'https://www.gstatic.com/flutter-onestack-prototype/genui/example_1.jpg';
-
-  final List<Map<String, dynamic>> _coinsShopItems =
-      const <Map<String, dynamic>>[
-        {
-          'name': 'Cool Hat',
-          'price': '100 Coins',
-          'image': _placeholderItemImageUrl,
-        },
-        {
-          'name': 'Stylish Shirt',
-          'price': '150 Coins',
-          'image': _placeholderItemImageUrl,
-        },
-        {
-          'name': 'Awesome Shoes',
-          'price': '120 Coins',
-          'image': _placeholderItemImageUrl,
-        },
-        {
-          'name': 'Fancy Glasses',
-          'price': '80 Coins',
-          'image': _placeholderItemImageUrl,
-        },
-        {
-          'name': 'Backpack',
-          'price': '200 Coins',
-          'image': _placeholderItemImageUrl,
-        },
-        {
-          'name': 'Magic Wand',
-          'price': '300 Coins',
-          'image': _placeholderItemImageUrl,
-        },
-      ];
-
-  final List<Map<String, dynamic>> _premiumShopItems = <Map<String, dynamic>>[
-    {
-      'name': 'Premium Pass',
-      'price': '\$9.99',
-      'image': _placeholderItemImageUrl,
-    },
-    {
-      'name': 'Exclusive Skin',
-      'price': '\$4.99',
-      'image': _placeholderItemImageUrl,
-    },
-    {
-      'name': 'Gem Pack (Small)',
-      'price': '\$1.99',
-      'image': _placeholderItemImageUrl,
-    },
-    {
-      'name': 'Gem Pack (Medium)',
-      'price': '\$4.99',
-      'image': _placeholderItemImageUrl,
-    },
-    {
-      'name': 'Gem Pack (Large)',
-      'price': '\$9.99',
-      'image': _placeholderItemImageUrl,
-    },
-    {
-      'name': 'Watch Ad',
-      'actionText': 'Get 50 Coins',
-      'iconData': Icons.play_circle_outline,
-      'isAd': true,
-    },
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+  void _logout() {
+    widget.state.loggedIn = false;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => AuthScreen(state: widget.state)),
+      (_) => false,
+    );
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
- @override
   Widget build(BuildContext context) {
+    final equipped = widget.state.byId(widget.state.equippedId);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2b343d),
+        title: const Text('Main'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFE75A7C)),
-          tooltip: 'Back',
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        title: const Text(
-          'Shop',
-          style: TextStyle(
-            color: Color(0xFFE75A7C),
-            fontFamily: 'Fredoka',
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: const Color(0xFFE75A7C),
-          labelColor: const Color(0xFFE75A7C),
-          unselectedLabelColor: const Color.fromARGB(179, 255, 255, 255),
-          labelStyle: const TextStyle(
-            fontFamily: 'Fredoka',
-          ),
-          tabs: const <Tab>[
-            Tab(
-              text: 'Coins Shop',
-              icon: Icon(Icons.monetization_on, color: Color(0xFFE75A7C)),
+          icon: const Icon(Icons.bar_chart),
+          tooltip: "Goals & Statistics",
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => GoalsStatsView(state: widget.state),
             ),
-            Tab(
-              text: 'Premium Shop',
-              icon: Icon(Icons.workspace_premium, color: Color(0xFFE75A7C)),
-            ),
-          ],
+          ).then((_) => setState(() {})),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: _ShopItemGrid(items: _coinsShopItems),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: _ShopItemGrid(items: _premiumShopItems),
-          ),
+        actions: [
+          IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
       ),
-    );
-  }
-}
-
-/// A page for displaying user statistics related to goals and coins.
-class StatsPage extends StatelessWidget {
-  const StatsPage({super.key});
-
-  static const Color pinkColor = Color(0xFFE75A7C);
-  static const Color darkCard = Color(0xFF2b343d);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2b343d),
-        title: const Text(
-          'Your Statistics',
-          style: TextStyle(
-            color: pinkColor,
-            fontFamily: 'Fredoka',
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: pinkColor),
-          tooltip: 'Back',
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const Text(
-              'Goals Progress',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Fredoka',
-                color: pinkColor,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildStatCard(
-              context,
-              title: 'Goals Completed',
-              value: '12',
-              icon: Icons.check_circle_outline,
-              chart: _buildBarChart(context, <double>[0.8, 0.6, 0.9, 0.7, 0.5]),
-              description: 'Progress on your last 5 goals.',
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Coin Economy',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Fredoka',
-                color: pinkColor,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildStatCard(
-              context,
-              title: 'Total Coins Earned',
-              value: '2500',
-              icon: Icons.monetization_on,
-              chart: _buildLineChart(context, <double>[
-                100,
-                150,
-                120,
-                200,
-                180,
-                250,
-              ]),
-              description: 'Coins earned over the last 6 days.',
-            ),
-            const SizedBox(height: 16),
-            _buildStatCard(
-              context,
-              title: 'Coins Spent',
-              value: '1800',
-              icon: Icons.shopping_cart,
-              chart: _buildLineChart(
+      body: Stack(
+        children: [
+          Positioned(
+            top: 12,
+            right: 12,
+            child: IconButton(
+              icon: const Icon(Icons.store, color: kAccent),
+              tooltip: "Shop",
+              onPressed: () => Navigator.push(
                 context,
-                <double>[50, 80, 60, 100, 90, 70],
-                color: pinkColor,
+                MaterialPageRoute(
+                  builder: (_) => ShopView(state: widget.state),
+                ),
+              ).then((_) => setState(() {})),
+            ),
+          ),
+          Center(
+            child: Transform.translate(
+              offset: const Offset(0, -110),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: kDarkSurface,
+                      borderRadius: BorderRadius.circular(20.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(24),
+                    child: CircleAvatar(
+                      radius: 70,
+                      backgroundColor: Colors.black12,
+                      backgroundImage: AssetImage(equipped.assetPath),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(equipped.name, style: titleStyle),
+                ],
               ),
-              description: 'Coins spent on items.',
+            ),
+          ),
+
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: InventoryBar(
+              state: widget.state,
+              selected: selectedInventoryId,
+              onSelect: (id) => setState(() => selectedInventoryId = id),
+              onEquip: () {
+                if (selectedInventoryId != null) {
+                  setState(() => widget.state.equip(selectedInventoryId!));
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/* ========================== INVENTORY BAR ============================= */
+
+class InventoryBar extends StatelessWidget {
+  final AppState state;
+  final int? selected;
+  final VoidCallback onEquip;
+  final ValueChanged<int> onSelect;
+
+  const InventoryBar({
+    super.key,
+    required this.state,
+    required this.selected,
+    required this.onEquip,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      elevation: 10,
+      color: kDarkSurface,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Inventory", style: titleStyle.copyWith(fontSize: 18)),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 80,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: state.owned.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (_, i) {
+                  final item = state.owned[i];
+                  final equipped = state.equippedId == item.id;
+                  final isSelected = selected == item.id;
+                  return GestureDetector(
+                    onTap: () => onSelect(item.id),
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 70,
+                          decoration: BoxDecoration(
+                            color: kScaffold,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected ? kAccent : Colors.white24,
+                              width: isSelected ? 3 : 1,
+                            ),
+                          ),
+                          child: Center(
+                            child: Image.asset(
+                              item.assetPath,
+                              width: 36,
+                              height: 36,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                        if (equipped)
+                          const Positioned(
+                            right: 2,
+                            top: 2,
+                            child: Icon(
+                              Icons.check_circle,
+                              size: 18,
+                              color: kAccent,
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onEquip,
+                    child: const Text('Equip'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text("Coins: ${state.coins}", style: bodyWhite),
+              ],
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildStatCard(
-  BuildContext context, {
-  required String title,
-  required String value,
-  required IconData icon,
-  required Widget chart,
-  required String description,
-}) {
-  return Card(
-    color: Color(0xFF2b343d),
-    elevation: 4.0,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-    child: Padding(
-      padding: EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Icon(icon, size: 30, color: Color(0xFFE75A7C)), // pink icon
-              SizedBox(width: 10),
-              Text(
-                title,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(color: Color.fromARGB(255, 255, 255, 255)),
+/* ======================== GOALS & STATISTICS VIEW ====================== */
+
+class GoalsStatsView extends StatefulWidget {
+  final AppState state;
+  const GoalsStatsView({super.key, required this.state});
+  @override
+  State<GoalsStatsView> createState() => _GoalsStatsViewState();
+}
+
+class _GoalsStatsViewState extends State<GoalsStatsView> {
+  TimeOfDay? newStart;
+  TimeOfDay? newEnd;
+
+  Future<void> _pickStart() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: widget.state.start,
+    );
+    if (picked != null) setState(() => newStart = picked);
+  }
+
+  Future<void> _pickEnd() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: widget.state.end,
+    );
+    if (picked != null) setState(() => newEnd = picked);
+  }
+
+  void _updateGoal() {
+    setState(() {
+      widget.state.start = newStart ?? widget.state.start;
+      widget.state.end = newEnd ?? widget.state.end;
+    });
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Goal updated")));
+  }
+
+  void _logout() {
+    widget.state.loggedIn = false;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => AuthScreen(state: widget.state)),
+      (_) => false,
+    );
+  }
+
+  String _fmt(TimeOfDay t) =>
+      "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Goals & Statistics"),
+        leading: const BackButton(),
+        actions: [
+          IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text("Goals", style: titleStyle),
+          const SizedBox(height: 8),
+          Card(
+            color: kDarkSurface,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Text(
+                    "Current Goal: ${_fmt(widget.state.start)} - ${_fmt(widget.state.end)}",
+                    style: bodyWhite.copyWith(fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            side: const BorderSide(color: Colors.white),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: _pickStart,
+                          child: Text(
+                            "Start: ${_fmt(newStart ?? widget.state.start)}",
+                            style: bodyWhite,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            side: const BorderSide(color: Colors.white),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: _pickEnd,
+                          child: Text(
+                            "End: ${_fmt(newEnd ?? widget.state.end)}",
+                            style: bodyWhite,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _updateGoal,
+                    child: const Text("Update Goal"),
+                  ),
+                ],
               ),
-              Spacer(),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text("Statistics", style: titleStyle),
+          const SizedBox(height: 8),
+          Card(
+            color: kDarkSurface,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: SizedBox(
+              height: 200,
+              child: CustomPaint(
+                painter: LineChartPainter(widget.state.dailyMinutes),
+                child: const Center(
+                  child: Text(
+                    "Daily Screentime (min)",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
               ),
-            ],
+            ),
           ),
-          SizedBox(height: 16),
-          Container(
-            height: 100,
-            width: double.infinity,
-            padding: EdgeInsets.all(8),
-            // No separate background here anymore because card is colored
-            child: chart,
-          ),
-          SizedBox(height: 10),
-          Text(
-            description,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: Colors.white),
+          const SizedBox(height: 16),
+          Card(
+            color: kDarkSurface,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: SizedBox(
+              height: 200,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: BarChart(data: widget.state.goalsMetPerWeek),
+              ),
+            ),
           ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }
 
+/* =============================== SHOP VIEW ============================= */
 
-  Widget _buildBarChart(BuildContext context, List<double> data) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: data.map<Widget>((double value) {
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.0),
-            child: Container(
-              height: value * 100, // Scale to max height of 100
-              // ignore: deprecated_member_use
-              color: Color(0xFFE75A7C).withOpacity(0.8), // pink bars
-            ),
-          ),
-        );
-      }).toList(),
+class ShopView extends StatefulWidget {
+  final AppState state;
+  const ShopView({super.key, required this.state});
+  @override
+  State<ShopView> createState() => _ShopViewState();
+}
+
+class _ShopViewState extends State<ShopView> {
+  void _logout() {
+    widget.state.loggedIn = false;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => AuthScreen(state: widget.state)),
+      (_) => false,
     );
   }
 
-  Widget _buildLineChart(
-    BuildContext context,
-    List<double> data, {
-    Color? color,
-  }) {
-    final double maxVal = data.reduce(
-      (double curr, double next) => curr > next ? curr : next,
-    );
-    final double scale = 100 / maxVal; // Scale to max height of 100
-
-    return CustomPaint(
-      painter: _LineChartPainter(
-        data.map((double e) => e * scale).toList(),
-        color ?? Color(0xFFE75A7C), // default pink line color if none passed
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Shop"),
+        leading: const BackButton(),
+        actions: [
+          IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
+        ],
       ),
-      child: Container(),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: widget.state.shop.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: .9,
+        ),
+        itemBuilder: (_, i) {
+          final item = widget.state.shop[i];
+          return Card(
+            color: kDarkSurface,
+            elevation: 6,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () {
+                final ok = widget.state.buy(item);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      ok ? "Purchased ${item.name}!" : "Not enough coins.",
+                    ),
+                  ),
+                );
+                setState(() {});
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 85),
+                    Image.asset(
+                      item.assetPath,
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      item.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        fontFamily: kFont,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text("${item.price} coins", style: bodyWhite),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
-class _LineChartPainter extends CustomPainter {
-  final List<double> data;
-  final Color lineColor;
+/* ========================== SIMPLE CHARTS ============================== */
 
-  _LineChartPainter(this.data, this.lineColor);
+class LineChartPainter extends CustomPainter {
+  final List<int> data;
+  LineChartPainter(this.data);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..color = lineColor
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+    final padding = 24.0;
+    final chartWidth = size.width - padding * 2;
+    final chartHeight = size.height - padding * 2;
 
-    final Path path = Path();
-    if (data.isNotEmpty) {
-      final double stepX = size.width / (data.length - 1);
-      path.moveTo(0, size.height - data[0]);
+    final axisPaint = Paint()
+      ..color = Colors.white54
+      ..strokeWidth = 1;
+    final linePaint = Paint()
+      ..color = kAccent
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
 
-      for (int i = 1; i < data.length; i++) {
-        path.lineTo(i * stepX, size.height - data[i]);
+    canvas.drawLine(
+      Offset(padding, size.height - padding),
+      Offset(size.width - padding, size.height - padding),
+      axisPaint,
+    );
+    canvas.drawLine(
+      Offset(padding, padding),
+      Offset(padding, size.height - padding),
+      axisPaint,
+    );
+
+    if (data.isEmpty) return;
+
+    final maxVal = data.reduce(max).toDouble();
+    final dx = chartWidth / (data.length - 1);
+
+    final path = Path();
+    for (int i = 0; i < data.length; i++) {
+      final x = padding + i * dx;
+      final y = size.height - padding - (data[i] / maxVal) * chartHeight;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
       }
     }
-    canvas.drawPath(path, paint);
+    canvas.drawPath(path, linePaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    if (oldDelegate is _LineChartPainter) {
-      return oldDelegate.data != data || oldDelegate.lineColor != lineColor;
-    }
-    return true;
-  }
+  bool shouldRepaint(covariant LineChartPainter oldDelegate) =>
+      oldDelegate.data != data;
 }
 
-void main() {
-  runApp(const MyApp());
+class BarChart extends StatelessWidget {
+  final List<int> data;
+  const BarChart({super.key, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final maxVal = data.isEmpty ? 1 : data.reduce(max);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(
+            maxVal + 1,
+            (i) => Text(
+              "$i",
+              style: const TextStyle(color: Colors.white70, fontSize: 10),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              for (int i = 0; i < data.length; i++)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Container(
+                      height: maxVal == 0 ? 0 : (data[i] / maxVal) * 130,
+                      decoration: BoxDecoration(
+                        color: kAccent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            "${data[i]}",
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
