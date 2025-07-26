@@ -62,7 +62,41 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/buddies/
+    - assets/buddies/circle/circleBlack.png
+    - assets/buddies/circle/circleBlue.png
+    - assets/buddies/circle/circleGreen.png
+    - assets/buddies/circle/circleOrange.png
+    - assets/buddies/circle/circlePink.png
+    - assets/buddies/circle/circleRed.png
+    - assets/buddies/circle/circleWhite.png
+    - assets/buddies/hexagon/hexagonBlack.png
+    - assets/buddies/hexagon/hexagonBlue.png
+    - assets/buddies/hexagon/hexagonGreen.png
+    - assets/buddies/hexagon/hexagonOrange.png
+    - assets/buddies/hexagon/hexagonPink.png
+    - assets/buddies/hexagon/hexagonRed.png
+    - assets/buddies/hexagon/hexagonWhite.png
+    - assets/buddies/pentagon/pentagonBlack.png
+    - assets/buddies/pentagon/pentagonBlue.png
+    - assets/buddies/pentagon/pentagonGreen.png
+    - assets/buddies/pentagon/pentagonOrange.png
+    - assets/buddies/pentagon/pentagonPink.png
+    - assets/buddies/pentagon/pentagonRed.png
+    - assets/buddies/pentagon/pentagonWhite.png
+    - assets/buddies/square/squareBlack.png
+    - assets/buddies/square/squareBlue.png
+    - assets/buddies/square/squareGreen.png
+    - assets/buddies/square/squareOrange.png
+    - assets/buddies/square/squarePink.png
+    - assets/buddies/square/squareRed.png
+    - assets/buddies/square/squareWhite.png
+    - assets/buddies/triangle/triangleBlack.png
+    - assets/buddies/triangle/triangleBlue.png
+    - assets/buddies/triangle/triangleGreen.png
+    - assets/buddies/triangle/triangleOrange.png
+    - assets/buddies/triangle/trianglePink.png
+    - assets/buddies/triangle/triangleRed.png
+    - assets/buddies/triangle/triangleWhite.png
 
 
   # To add assets to your application, add an assets section, like this:

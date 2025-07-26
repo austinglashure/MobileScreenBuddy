@@ -91,7 +91,7 @@ class AppState {
 
   final List<AvatarItem> owned = [
     AvatarItem(
-      assetPath: 'buddies/triangle/triangleRed.png',
+      assetPath: 'assets/buddies/triangle/triangleRed.png',
       name: "Buddy",
       id: 0,
     ),
@@ -99,19 +99,19 @@ class AppState {
 
   final List<AvatarItem> shop = [
     AvatarItem(
-      assetPath: 'buddies/triangle/triangleGreen.png',
+      assetPath: 'assets/buddies/triangle/triangleGreen.png',
       name: "Green Buddy",
       id: 1,
       price: 50,
     ),
     AvatarItem(
-      assetPath: 'buddies/triangle/triangleBlue.png',
+      assetPath: 'assets/buddies/triangle/triangleBlue.png',
       name: "Blue Buddy",
       id: 2,
       price: 75,
     ),
     AvatarItem(
-      assetPath: 'buddies/triangle/triangleOrange.png',
+      assetPath: 'assets/buddies/triangle/triangleOrange.png',
       name: "Orange Buddy",
       id: 3,
       price: 100,
@@ -210,102 +210,110 @@ class _AuthScreenState extends State<AuthScreen> {
     return List.generate(6, (_) => rand.nextInt(10)).join();
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text(
-        'Welcome to ScreenBuddy',
-        style: const TextStyle(
-          color: kAccent,
-          fontFamily: kFont,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-    ),
-    body: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
-
-              // Login/Register title
-              Text(
-                showLogin ? 'Welcome Back!' : 'Sign Up!',
-                style: const TextStyle(
-                  color: kAccent,
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: kFont,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Dark background container around form
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: kFont,
-                        ),
-                        cursorColor: Colors.white,
-                        decoration: _fieldDec('Email', Icons.person),
-                        onSaved: (v) => email = v ?? '',
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: kFont,
-                        ),
-                        cursorColor: Colors.white,
-                        obscureText: true,
-                        decoration: _fieldDec('Password', Icons.lock),
-                        onSaved: (v) => password = v ?? '',
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _handleSubmit,
-                        child: Text(showLogin ? 'Login' : 'Register'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => setState(() => showLogin = !showLogin),
-                child: Text(
-                  showLogin
-                      ? "Don't have an account? Register"
-                      : "Have an account? Login",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: kFont,
-                  ),
-                ),
-              ),
-            ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Welcome to ScreenBuddy',
+          style: const TextStyle(
+            color: kAccent,
+            fontFamily: kFont,
+            fontWeight: FontWeight.w400,
           ),
         ),
       ),
-    ),
-  );
-}
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const SizedBox(height: 10),
+
+                // Login/Register title
+                Text(
+                  showLogin ? 'Welcome Back!' : 'Sign Up!',
+                  style: const TextStyle(
+                    color: kAccent,
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: kFont,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Dark background container around form
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: kFont,
+                          ),
+                          cursorColor: Colors.white,
+                          decoration: _fieldDec('Email', Icons.person),
+                          onSaved: (v) => email = v ?? '',
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: kFont,
+                          ),
+                          cursorColor: Colors.white,
+                          obscureText: true,
+                          decoration: _fieldDec('Password', Icons.lock),
+                          onSaved: (v) => password = v ?? '',
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _handleSubmit,
+                          child: Text(showLogin ? 'Login' : 'Register'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => setState(() => showLogin = !showLogin),
+                  child: Text(
+                    showLogin
+                        ? "Don't have an account? Register"
+                        : "Have an account? Login",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontFamily: kFont,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+                Image.asset(
+                  'assets/buddies/triangle/triangleRed.png',
+                  width: 100.0,
+                  height: 100.0,
+                  fit: BoxFit.contain,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /* ========================= VERIFY PIN SCREEN =========================== */
@@ -492,7 +500,6 @@ class _MainViewState extends State<MainView> {
             child: Transform.translate(
               offset: const Offset(0, -110),
               child: Column(
-                
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -601,6 +608,7 @@ class InventoryBar extends StatelessWidget {
                               item.assetPath,
                               width: 36,
                               height: 36,
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
@@ -875,7 +883,12 @@ class _ShopViewState extends State<ShopView> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     const SizedBox(height: 85),
-                    Image.asset(item.assetPath, width: 48, height: 48),
+                    Image.asset(
+                      item.assetPath,
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       item.name,
