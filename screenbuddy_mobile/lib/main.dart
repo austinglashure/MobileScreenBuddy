@@ -1037,6 +1037,27 @@ class LineChartPainter extends CustomPainter {
       }
     }
 
+    // Middle of average line
+    final avgMidIndex = (averageDailyMinutes.length / 2).floor();
+    final avgMidX = padding + avgMidIndex * dx;
+    final avgMidY = size.height - padding - (averageDailyMinutes[avgMidIndex] / maxVal) * chartHeight;
+
+    final avgLabel = TextPainter(
+      text: const TextSpan(
+        text: "Avg",
+        style: TextStyle(color: Colors.white70, fontSize: 12),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    avgLabel.paint(canvas, Offset(avgMidX - avgLabel.width / 2, avgMidY - 14));
+
+    
+
+
+
+
+
     final healthyMinutesPath = Path();
     for (int i = 0; i < healthyDailyMinutes.length; i++) {
       final x = padding + i * dx;
@@ -1050,6 +1071,24 @@ class LineChartPainter extends CustomPainter {
         healthyMinutesPath.lineTo(x, y);
       }
     }
+    
+    // Middle of healthy line
+    final healthyMidIndex = (healthyDailyMinutes.length / 2).floor();
+    final healthyMidX = padding + healthyMidIndex * dx;
+    final healthyMidY = size.height - padding - (healthyDailyMinutes[healthyMidIndex] / maxVal) * chartHeight;
+
+    final healthyLabel = TextPainter(
+      text: const TextSpan(
+        text: "Healthy",
+        style: TextStyle(color: Colors.white70, fontSize: 12),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    healthyLabel.paint(canvas, Offset(healthyMidX - healthyLabel.width / 2, healthyMidY - 14));
+
+
+
 
     canvas.drawPath(averageMinutesPath, averageMinutesColor);
     canvas.drawPath(healthyMinutesPath, healthyMinutesColor);
@@ -1069,6 +1108,20 @@ class LineChartPainter extends CustomPainter {
       }
     }
     canvas.drawPath(userMinutesPath, userMinutesColor);
+
+    final userX = padding + (data.length - 1) * dx;
+    final userY = size.height - padding - (data.last / maxVal) * chartHeight;
+
+    final userLabel = TextPainter(
+      text: const TextSpan(
+        text: "You",
+        style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    userLabel.paint(canvas, Offset(userX + 4, userY - 6));
+
   }
 
   @override
