@@ -86,42 +86,228 @@ class MyApp extends StatelessWidget {
 
 class AppState {
   bool loggedIn = false;
-  int coins = 150;
+  int coins = 1500;
   String? pendingEmailCode;
+  int goalMinutes = 0;
 
   final List<AvatarItem> owned = [
     AvatarItem(
       assetPath: 'assets/buddies/triangle/triangleRed.png',
-      name: "Buddy",
+      name: "Red Triangle",
       id: 0,
     ),
   ];
 
+  /*-----------------Shop Items-------------------------*/
+
   final List<AvatarItem> shop = [
     AvatarItem(
       assetPath: 'assets/buddies/triangle/triangleGreen.png',
-      name: "Green Buddy",
+      name: "Green Triangle",
       id: 1,
-      price: 50,
+      price: 100,
     ),
     AvatarItem(
       assetPath: 'assets/buddies/triangle/triangleBlue.png',
-      name: "Blue Buddy",
+      name: "Blue Triangle",
       id: 2,
-      price: 75,
+      price: 100,
     ),
     AvatarItem(
       assetPath: 'assets/buddies/triangle/triangleOrange.png',
-      name: "Orange Buddy",
+      name: "Orange Triangle",
       id: 3,
       price: 100,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/triangle/triangleWhite.png',
+      name: "White Triangle",
+      id: 4,
+      price: 100,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/triangle/triangleBlack.png',
+      name: "Black Triangle",
+      id: 5,
+      price: 100,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/triangle/trianglePink.png',
+      name: "Pink Triangle",
+      id: 6,
+      price: 100,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/square/squareRed.png',
+      name: "Red square",
+      id: 7,
+      price: 250,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/square/squareGreen.png',
+      name: "Green square",
+      id: 8,
+      price: 250,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/square/squareBlue.png',
+      name: "Blue square",
+      id: 9,
+      price: 250,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/square/squareOrange.png',
+      name: "Orange square",
+      id: 10,
+      price: 250,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/square/squareWhite.png',
+      name: "White square",
+      id: 11,
+      price: 250,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/square/squareBlack.png',
+      name: "Black square",
+      id: 12,
+      price: 250,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/square/squarePink.png',
+      name: "Pink square",
+      id: 13,
+      price: 250,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/pentagon/pentagonRed.png',
+      name: "Red pentagon",
+      id: 14,
+      price: 500,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/pentagon/pentagonGreen.png',
+      name: "Green pentagon",
+      id: 15,
+      price: 500,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/pentagon/pentagonBlue.png',
+      name: "Blue pentagon",
+      id: 16,
+      price: 500,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/pentagon/pentagonOrange.png',
+      name: "Orange pentagon",
+      id: 17,
+      price: 500,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/pentagon/pentagonWhite.png',
+      name: "White pentagon",
+      id: 18,
+      price: 500,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/pentagon/pentagonBlack.png',
+      name: "Black pentagon",
+      id: 19,
+      price: 500,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/pentagon/pentagonPink.png',
+      name: "Pink pentagon",
+      id: 20,
+      price: 500,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/hexagon/hexagonRed.png',
+      name: "Red hexagon",
+      id: 21,
+      price: 1000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/hexagon/hexagonGreen.png',
+      name: "Green hexagon",
+      id: 22,
+      price: 1000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/hexagon/hexagonBlue.png',
+      name: "Blue hexagon",
+      id: 23,
+      price: 1000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/hexagon/hexagonOrange.png',
+      name: "Orange hexagon",
+      id: 24,
+      price: 1000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/hexagon/hexagonWhite.png',
+      name: "White hexagon",
+      id: 25,
+      price: 1000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/hexagon/hexagonBlack.png',
+      name: "Black hexagon",
+      id: 26,
+      price: 1000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/hexagon/hexagonPink.png',
+      name: "Pink hexagon",
+      id: 27,
+      price: 1000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/circle/circleRed.png',
+      name: "Red circle",
+      price: 2000,
+      id: 28,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/circle/circleGreen.png',
+      name: "Green circle",
+      id: 29,
+      price: 2000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/circle/circleBlue.png',
+      name: "Blue circle",
+      id: 30,
+      price: 2000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/circle/circleOrange.png',
+      name: "Orange circle",
+      id: 31,
+      price: 2000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/circle/circleWhite.png',
+      name: "White circle",
+      id: 32,
+      price: 2000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/circle/circleBlack.png',
+      name: "Black circle",
+      id: 33,
+      price: 2000,
+    ),
+    AvatarItem(
+      assetPath: 'assets/buddies/circle/circlePink.png',
+      name: "Pink circle",
+      id: 34,
+      price: 2000,
     ),
   ];
 
   int equippedId = 0;
-
-  TimeOfDay start = const TimeOfDay(hour: 12, minute: 0);
-  TimeOfDay end = const TimeOfDay(hour: 12, minute: 0);
 
   final List<int> dailyMinutes = List.generate(
     7,
@@ -653,35 +839,17 @@ class InventoryBar extends StatelessWidget {
 class GoalsStatsView extends StatefulWidget {
   final AppState state;
   const GoalsStatsView({super.key, required this.state});
-  
+
   @override
   State<GoalsStatsView> createState() => _GoalsStatsViewState();
 }
 
 class _GoalsStatsViewState extends State<GoalsStatsView> {
-  TimeOfDay? newStart;
-  TimeOfDay? newEnd;
-
-  Future<void> _pickStart() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: widget.state.start,
-    );
-    if (picked != null) setState(() => newStart = picked);
-  }
-
-  Future<void> _pickEnd() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: widget.state.end,
-    );
-    if (picked != null) setState(() => newEnd = picked);
-  }
+  int goalMinutes = 1440; // a full day with no phone
 
   void _updateGoal() {
     setState(() {
-      widget.state.start = newStart ?? widget.state.start;
-      widget.state.end = newEnd ?? widget.state.end;
+      widget.state.goalMinutes = goalMinutes;
     });
     ScaffoldMessenger.of(
       context,
@@ -697,8 +865,11 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
     );
   }
 
-  String _fmt(TimeOfDay t) =>
-      "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
+  String _formatGoal(int minutes) {
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    return "${h}h ${m.toString().padLeft(2, '0')}m";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -726,45 +897,26 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
               child: Column(
                 children: [
                   Text(
-                    "Current Goal: ${_fmt(widget.state.start)} - ${_fmt(widget.state.end)}",
+                    "Current Goal: ${_formatGoal(widget.state.goalMinutes)}",
                     style: bodyWhite.copyWith(fontSize: 16),
                   ),
                   const SizedBox(height: 16),
+                  Slider(
+                    value: goalMinutes.toDouble(),
+                    min: 0,
+                    max: 1440,
+                    divisions: 144, // steps of 10 minutes
+                    label: _formatGoal(goalMinutes),
+                    activeColor: kAccent,
+                    inactiveColor: Colors.white24,
+                    onChanged: (v) => setState(() => goalMinutes = v.toInt()),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            side: const BorderSide(color: Colors.white),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: _pickStart,
-                          child: Text(
-                            "Start: ${_fmt(newStart ?? widget.state.start)}",
-                            style: bodyWhite,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            side: const BorderSide(color: Colors.white),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: _pickEnd,
-                          child: Text(
-                            "End: ${_fmt(newEnd ?? widget.state.end)}",
-                            style: bodyWhite,
-                          ),
-                        ),
-                      ),
+                      Text("0 m", style: bodyWhite),
+                      Text("24 h", style: bodyWhite),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -789,9 +941,7 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
               height: 200,
               child: CustomPaint(
                 painter: LineChartPainter(widget.state.dailyMinutes),
-                child: const Center(
-
-                ),
+                child: const Center(),
               ),
             ),
           ),
@@ -981,7 +1131,11 @@ class LineChartPainter extends CustomPainter {
     // Y labels
     for (double yVal = 0; yVal <= maxVal; yVal += dyStep) {
       final y = size.height - padding - (yVal / maxVal) * chartHeight;
-      canvas.drawLine(Offset(padding - 4, y), Offset(size.width - padding, y), axisPaint);
+      canvas.drawLine(
+        Offset(padding - 4, y),
+        Offset(size.width - padding, y),
+        axisPaint,
+      );
 
       final tp = TextPainter(
         text: TextSpan(text: yVal.toInt().toString(), style: labelStyle),
@@ -1001,12 +1155,19 @@ class LineChartPainter extends CustomPainter {
     }
 
     // X and Y lines
-    canvas.drawLine(Offset(padding, padding), Offset(padding, size.height - padding), axisPaint);
-    canvas.drawLine(Offset(padding, size.height - padding), Offset(size.width - padding, size.height - padding), axisPaint);
-
+    canvas.drawLine(
+      Offset(padding, padding),
+      Offset(padding, size.height - padding),
+      axisPaint,
+    );
+    canvas.drawLine(
+      Offset(padding, size.height - padding),
+      Offset(size.width - padding, size.height - padding),
+      axisPaint,
+    );
 
     // Title
-    
+
     final titleTp = TextPainter(
       text: TextSpan(
         text: 'User Screen Time (mins)',
@@ -1015,13 +1176,15 @@ class LineChartPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    titleTp.paint(canvas, Offset(
-      (size.width - titleTp.width) / 2,
-      padding / 2 - titleTp.height / 2,
-    ));
+    titleTp.paint(
+      canvas,
+      Offset(
+        (size.width - titleTp.width) / 2,
+        padding / 2 - titleTp.height / 2,
+      ),
+    );
 
     /*-----------------------Drawing the Default Lines---------------------*/
-
 
     final averageMinutesPath = Path();
     for (int i = 0; i < averageDailyMinutes.length; i++) {
@@ -1040,7 +1203,10 @@ class LineChartPainter extends CustomPainter {
     // Middle of average line
     final avgMidIndex = (averageDailyMinutes.length / 2).floor();
     final avgMidX = padding + avgMidIndex * dx;
-    final avgMidY = size.height - padding - (averageDailyMinutes[avgMidIndex] / maxVal) * chartHeight;
+    final avgMidY =
+        size.height -
+        padding -
+        (averageDailyMinutes[avgMidIndex] / maxVal) * chartHeight;
 
     final avgLabel = TextPainter(
       text: const TextSpan(
@@ -1051,12 +1217,6 @@ class LineChartPainter extends CustomPainter {
     )..layout();
 
     avgLabel.paint(canvas, Offset(avgMidX - avgLabel.width / 2, avgMidY - 14));
-
-    
-
-
-
-
 
     final healthyMinutesPath = Path();
     for (int i = 0; i < healthyDailyMinutes.length; i++) {
@@ -1071,11 +1231,14 @@ class LineChartPainter extends CustomPainter {
         healthyMinutesPath.lineTo(x, y);
       }
     }
-    
+
     // Middle of healthy line
     final healthyMidIndex = (healthyDailyMinutes.length / 2).floor();
     final healthyMidX = padding + healthyMidIndex * dx;
-    final healthyMidY = size.height - padding - (healthyDailyMinutes[healthyMidIndex] / maxVal) * chartHeight;
+    final healthyMidY =
+        size.height -
+        padding -
+        (healthyDailyMinutes[healthyMidIndex] / maxVal) * chartHeight;
 
     final healthyLabel = TextPainter(
       text: const TextSpan(
@@ -1085,10 +1248,10 @@ class LineChartPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    healthyLabel.paint(canvas, Offset(healthyMidX - healthyLabel.width / 2, healthyMidY - 14));
-
-
-
+    healthyLabel.paint(
+      canvas,
+      Offset(healthyMidX - healthyLabel.width / 2, healthyMidY - 14),
+    );
 
     canvas.drawPath(averageMinutesPath, averageMinutesColor);
     canvas.drawPath(healthyMinutesPath, healthyMinutesColor);
@@ -1115,13 +1278,16 @@ class LineChartPainter extends CustomPainter {
     final userLabel = TextPainter(
       text: const TextSpan(
         text: "You",
-        style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: Colors.white70,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
 
     userLabel.paint(canvas, Offset(userX + 4, userY - 6));
-
   }
 
   @override
@@ -1198,10 +1364,7 @@ class BarChart extends StatelessWidget {
                 child: Center(
                   child: Text(
                     days[i],
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 10,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ),
               );
