@@ -125,7 +125,7 @@ class AppState {
 
   final List<int> dailyMinutes = List.generate(
     7,
-    (_) => 30 + Random().nextInt(120),
+    (_) => 90 + Random().nextInt(120),
   );
   final List<int> goalsMetPerWeek = List.generate(
     6,
@@ -653,6 +653,7 @@ class InventoryBar extends StatelessWidget {
 class GoalsStatsView extends StatefulWidget {
   final AppState state;
   const GoalsStatsView({super.key, required this.state});
+  
   @override
   State<GoalsStatsView> createState() => _GoalsStatsViewState();
 }
@@ -789,10 +790,7 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
               child: CustomPaint(
                 painter: LineChartPainter(widget.state.dailyMinutes),
                 child: const Center(
-                  child: Text(
-                    "Daily Screentime (min)",
-                    style: TextStyle(color: Colors.white),
-                  ),
+
                 ),
               ),
             ),
@@ -916,6 +914,13 @@ class _ShopViewState extends State<ShopView> {
 
 class LineChartPainter extends CustomPainter {
   final List<int> data;
+  final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  // 5 hours and 16 minutes is the average for all Americans (316 mins)
+  final List<int> averageDailyMinutes = List.generate(7, (_) => 316);
+  // 2 hours is the limit on "healthy" usage according to Psychologists (120 mins)
+  final List<int> healthyDailyMinutes = List.generate(7, (_) => 120);
+
   LineChartPainter(this.data);
 
   @override
@@ -924,13 +929,31 @@ class LineChartPainter extends CustomPainter {
     final chartWidth = size.width - padding * 2;
     final chartHeight = size.height - padding * 2;
 
+    final labelStyle = const TextStyle(color: Colors.white70, fontSize: 10);
+    final double dyStep = 120.0; // Every 2 hours (120 minutes)
+
+    /*-------------------Paint Colors-------------------------------------*/
+
     final axisPaint = Paint()
       ..color = Colors.white54
       ..strokeWidth = 1;
-    final linePaint = Paint()
-      ..color = kAccent
+
+    final averageMinutesColor = Paint()
+      ..color = const Color.fromARGB(255, 255, 0, 0)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
+
+    final healthyMinutesColor = Paint()
+      ..color = const Color.fromARGB(255, 72, 255, 0)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    final userMinutesColor = Paint()
+      ..color = const Color.fromARGB(255, 0, 0, 0)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    /*---------------------Draw Empty Graph-------------------------------*/
 
     canvas.drawLine(
       Offset(padding, size.height - padding),
@@ -943,22 +966,162 @@ class LineChartPainter extends CustomPainter {
       axisPaint,
     );
 
+    /*--------------------Determining the bounds---------------------------*/
+
+    final defaultMaxVal = 600.0;
+
+    final double maxVal = data.isNotEmpty
+        ? max(defaultMaxVal, data.reduce(max).toDouble())
+        : defaultMaxVal;
+
+    final dx = chartWidth / (averageDailyMinutes.length - 1);
+
+    /*-----------------------Draw axis tick lines and labels---------------------*/
+
+    // Y labels
+    for (double yVal = 0; yVal <= maxVal; yVal += dyStep) {
+      final y = size.height - padding - (yVal / maxVal) * chartHeight;
+      canvas.drawLine(Offset(padding - 4, y), Offset(size.width - padding, y), axisPaint);
+
+      final tp = TextPainter(
+        text: TextSpan(text: yVal.toInt().toString(), style: labelStyle),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, Offset(padding - tp.width - 8, y - tp.height / 2));
+    }
+
+    // X labels
+    for (int i = 0; i < days.length; i++) {
+      final x = padding + i * dx;
+      final tp = TextPainter(
+        text: TextSpan(text: days[i], style: labelStyle),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, Offset(x - tp.width / 2, size.height - padding + 4));
+    }
+
+    // X and Y lines
+    canvas.drawLine(Offset(padding, padding), Offset(padding, size.height - padding), axisPaint);
+    canvas.drawLine(Offset(padding, size.height - padding), Offset(size.width - padding, size.height - padding), axisPaint);
+
+
+    // Title
+    
+    final titleTp = TextPainter(
+      text: TextSpan(
+        text: 'User Screen Time (mins)',
+        style: titleStyle.copyWith(color: Colors.white, fontSize: 20),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    titleTp.paint(canvas, Offset(
+      (size.width - titleTp.width) / 2,
+      padding / 2 - titleTp.height / 2,
+    ));
+
+    /*-----------------------Drawing the Default Lines---------------------*/
+
+
+    final averageMinutesPath = Path();
+    for (int i = 0; i < averageDailyMinutes.length; i++) {
+      final x = padding + i * dx;
+      final y =
+          size.height -
+          padding -
+          (averageDailyMinutes[i] / maxVal) * chartHeight;
+      if (i == 0) {
+        averageMinutesPath.moveTo(x, y);
+      } else {
+        averageMinutesPath.lineTo(x, y);
+      }
+    }
+
+    // Middle of average line
+    final avgMidIndex = (averageDailyMinutes.length / 2).floor();
+    final avgMidX = padding + avgMidIndex * dx;
+    final avgMidY = size.height - padding - (averageDailyMinutes[avgMidIndex] / maxVal) * chartHeight;
+
+    final avgLabel = TextPainter(
+      text: const TextSpan(
+        text: "Avg",
+        style: TextStyle(color: Colors.white70, fontSize: 12),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    avgLabel.paint(canvas, Offset(avgMidX - avgLabel.width / 2, avgMidY - 14));
+
+    
+
+
+
+
+
+    final healthyMinutesPath = Path();
+    for (int i = 0; i < healthyDailyMinutes.length; i++) {
+      final x = padding + i * dx;
+      final y =
+          size.height -
+          padding -
+          (healthyDailyMinutes[i] / maxVal) * chartHeight;
+      if (i == 0) {
+        healthyMinutesPath.moveTo(x, y);
+      } else {
+        healthyMinutesPath.lineTo(x, y);
+      }
+    }
+    
+    // Middle of healthy line
+    final healthyMidIndex = (healthyDailyMinutes.length / 2).floor();
+    final healthyMidX = padding + healthyMidIndex * dx;
+    final healthyMidY = size.height - padding - (healthyDailyMinutes[healthyMidIndex] / maxVal) * chartHeight;
+
+    final healthyLabel = TextPainter(
+      text: const TextSpan(
+        text: "Healthy",
+        style: TextStyle(color: Colors.white70, fontSize: 12),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    healthyLabel.paint(canvas, Offset(healthyMidX - healthyLabel.width / 2, healthyMidY - 14));
+
+
+
+
+    canvas.drawPath(averageMinutesPath, averageMinutesColor);
+    canvas.drawPath(healthyMinutesPath, healthyMinutesColor);
+
     if (data.isEmpty) return;
 
-    final maxVal = data.reduce(max).toDouble();
-    final dx = chartWidth / (data.length - 1);
+    /*------------------Drawing User Data Line-----------------------------*/
 
-    final path = Path();
+    final userMinutesPath = Path();
     for (int i = 0; i < data.length; i++) {
       final x = padding + i * dx;
       final y = size.height - padding - (data[i] / maxVal) * chartHeight;
       if (i == 0) {
-        path.moveTo(x, y);
+        userMinutesPath.moveTo(x, y);
       } else {
-        path.lineTo(x, y);
+        userMinutesPath.lineTo(x, y);
       }
     }
-    canvas.drawPath(path, linePaint);
+    canvas.drawPath(userMinutesPath, userMinutesColor);
+
+    final userX = padding + (data.length - 1) * dx;
+    final userY = size.height - padding - (data.last / maxVal) * chartHeight;
+
+    final userLabel = TextPainter(
+      text: const TextSpan(
+        text: "You",
+        style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    userLabel.paint(canvas, Offset(userX + 4, userY - 6));
+
   }
 
   @override
@@ -973,54 +1136,79 @@ class BarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final maxVal = data.isEmpty ? 1 : data.reduce(max);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(
-            maxVal + 1,
-            (i) => Text(
-              "$i",
-              style: const TextStyle(color: Colors.white70, fontSize: 10),
+    const barHeight = 100.0;
+    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    return SizedBox(
+      height: barHeight + 30, // extra room to prevent overflow
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                "Goals Completed",
+                style: titleStyle.copyWith(color: Colors.white, fontSize: 20),
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              for (int i = 0; i < data.length; i++)
-                Expanded(
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(data.length, (i) {
+                final height = maxVal == 0 ? 0 : (data[i] / maxVal) * barHeight;
+                return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Container(
-                      height: maxVal == 0 ? 0 : (data[i] / maxVal) * 130,
-                      decoration: BoxDecoration(
-                        color: kAccent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            "${data[i]}",
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.white,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          height: height.toDouble(),
+                          decoration: BoxDecoration(
+                            color: kAccent,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                "${data[i]}",
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: List.generate(data.length, (i) {
+              return Expanded(
+                child: Center(
+                  child: Text(
+                    days[i],
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 10,
                     ),
                   ),
                 ),
-            ],
+              );
+            }),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
