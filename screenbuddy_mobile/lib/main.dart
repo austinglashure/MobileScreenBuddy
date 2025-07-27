@@ -653,6 +653,7 @@ class InventoryBar extends StatelessWidget {
 class GoalsStatsView extends StatefulWidget {
   final AppState state;
   const GoalsStatsView({super.key, required this.state});
+  
   @override
   State<GoalsStatsView> createState() => _GoalsStatsViewState();
 }
@@ -789,10 +790,7 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
               child: CustomPaint(
                 painter: LineChartPainter(widget.state.dailyMinutes),
                 child: const Center(
-                  child: Text(
-                    "User Screen Time (mins)",
-                    style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
-                  ),
+
                 ),
               ),
             ),
@@ -916,6 +914,7 @@ class _ShopViewState extends State<ShopView> {
 
 class LineChartPainter extends CustomPainter {
   final List<int> data;
+  final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   // 5 hours and 16 minutes is the average for all Americans (316 mins)
   final List<int> averageDailyMinutes = List.generate(7, (_) => 316);
@@ -929,6 +928,9 @@ class LineChartPainter extends CustomPainter {
     final padding = 24.0;
     final chartWidth = size.width - padding * 2;
     final chartHeight = size.height - padding * 2;
+
+    final labelStyle = const TextStyle(color: Colors.white70, fontSize: 10);
+    final double dyStep = 120.0; // Every 2 hours (120 minutes)
 
     /*-------------------Paint Colors-------------------------------------*/
 
@@ -974,7 +976,52 @@ class LineChartPainter extends CustomPainter {
 
     final dx = chartWidth / (averageDailyMinutes.length - 1);
 
+    /*-----------------------Draw axis tick lines and labels---------------------*/
+
+    // Y labels
+    for (double yVal = 0; yVal <= maxVal; yVal += dyStep) {
+      final y = size.height - padding - (yVal / maxVal) * chartHeight;
+      canvas.drawLine(Offset(padding - 4, y), Offset(size.width - padding, y), axisPaint);
+
+      final tp = TextPainter(
+        text: TextSpan(text: yVal.toInt().toString(), style: labelStyle),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, Offset(padding - tp.width - 8, y - tp.height / 2));
+    }
+
+    // X labels
+    for (int i = 0; i < days.length; i++) {
+      final x = padding + i * dx;
+      final tp = TextPainter(
+        text: TextSpan(text: days[i], style: labelStyle),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, Offset(x - tp.width / 2, size.height - padding + 4));
+    }
+
+    // X and Y lines
+    canvas.drawLine(Offset(padding, padding), Offset(padding, size.height - padding), axisPaint);
+    canvas.drawLine(Offset(padding, size.height - padding), Offset(size.width - padding, size.height - padding), axisPaint);
+
+
+    // Title
+    
+    final titleTp = TextPainter(
+      text: TextSpan(
+        text: 'User Screen Time (mins)',
+        style: titleStyle.copyWith(color: Colors.white, fontSize: 20),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    titleTp.paint(canvas, Offset(
+      (size.width - titleTp.width) / 2,
+      padding / 2 - titleTp.height / 2,
+    ));
+
     /*-----------------------Drawing the Default Lines---------------------*/
+
 
     final averageMinutesPath = Path();
     for (int i = 0; i < averageDailyMinutes.length; i++) {
@@ -1036,54 +1083,79 @@ class BarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final maxVal = data.isEmpty ? 1 : data.reduce(max);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(
-            maxVal + 1,
-            (i) => Text(
-              "$i",
-              style: const TextStyle(color: Colors.white70, fontSize: 10),
+    const barHeight = 100.0;
+    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    return SizedBox(
+      height: barHeight + 30, // extra room to prevent overflow
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                "Goals Completed",
+                style: titleStyle.copyWith(color: Colors.white, fontSize: 20),
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              for (int i = 0; i < data.length; i++)
-                Expanded(
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(data.length, (i) {
+                final height = maxVal == 0 ? 0 : (data[i] / maxVal) * barHeight;
+                return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Container(
-                      height: maxVal == 0 ? 0 : (data[i] / maxVal) * 130,
-                      decoration: BoxDecoration(
-                        color: kAccent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            "${data[i]}",
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.white,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          height: height.toDouble(),
+                          decoration: BoxDecoration(
+                            color: kAccent,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                "${data[i]}",
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: List.generate(data.length, (i) {
+              return Expanded(
+                child: Center(
+                  child: Text(
+                    days[i],
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 10,
                     ),
                   ),
                 ),
-            ],
+              );
+            }),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
