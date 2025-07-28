@@ -1,5 +1,10 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'shop.dart';
 
 void main() => runApp(MyApp());
 
@@ -88,6 +93,7 @@ class AppState {
   bool loggedIn = false;
   int coins = 150;
   String? pendingEmailCode;
+  String? token;
 
   final List<AvatarItem> owned = [
     AvatarItem(
@@ -97,26 +103,7 @@ class AppState {
     ),
   ];
 
-  final List<AvatarItem> shop = [
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleGreen.png',
-      name: "Green Buddy",
-      id: 1,
-      price: 50,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleBlue.png',
-      name: "Blue Buddy",
-      id: 2,
-      price: 75,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleOrange.png',
-      name: "Orange Buddy",
-      id: 3,
-      price: 100,
-    ),
-  ];
+  final List<AvatarItem> shop = shopList;
 
   int equippedId = 0;
 
@@ -143,19 +130,36 @@ class AppState {
     }
     return false;
   }
-}
 
-class AvatarItem {
-  final String assetPath;
-  final String name;
-  final int id;
-  final int price;
-  AvatarItem({
-    required this.assetPath,
-    required this.name,
-    required this.id,
-    this.price = 0,
-  });
+  Future<int> getCoins() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/user'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      print("Login failed by status code: ${response.statusCode}");
+      return 0;
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Login failed: Empty response body");
+      return 0;
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['user'] == null) {
+      print("Login failed: No user data found");
+      return 0;
+    }
+
+    // coins = responseData['user']['coins'] ?? 0;
+    return responseData['user']['coins'] ?? 0;
+  }
 }
 
 /* ============================ AUTH SCREEN ============================== */
@@ -172,6 +176,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   String email = "";
   String password = "";
+  String username = "";
 
   InputDecoration _fieldDec(String label, IconData icon) => InputDecoration(
     labelText: label,
@@ -185,9 +190,34 @@ class _AuthScreenState extends State<AuthScreen> {
     ),
   );
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
     _formKey.currentState?.save();
     if (showLogin) {
+      final response = await http.post(
+        Uri.parse('https://cometcontacts4331.com/api/login'),
+        body: jsonEncode({'username': username, 'password': password}),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode != 200) {
+        print("Login failed by status code: ${response.statusCode}");
+        return;
+      }
+
+      final body = response.body;
+      if (body.isEmpty) {
+        print("Login failed: Empty response body");
+        return;
+      }
+
+      final responseData = jsonDecode(body);
+      if (responseData['user'] == null) {
+        print("Login failed: No user data found");
+        return;
+      }
+
+      widget.state.token = responseData['token'];
+
       widget.state.loggedIn = true;
       Navigator.pushReplacement(
         context,
@@ -256,14 +286,33 @@ class _AuthScreenState extends State<AuthScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
+                        showLogin
+                            ? const SizedBox.shrink()
+                            : Column(
+                                children: [
+                                  TextFormField(
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: kFont,
+                                    ),
+                                    cursorColor: Colors.white,
+                                    decoration: _fieldDec(
+                                      'Email',
+                                      Icons.person_pin,
+                                    ),
+                                    onSaved: (v) => email = v ?? '',
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
                         TextFormField(
                           style: const TextStyle(
                             color: Colors.white,
                             fontFamily: kFont,
                           ),
                           cursorColor: Colors.white,
-                          decoration: _fieldDec('Email', Icons.person),
-                          onSaved: (v) => email = v ?? '',
+                          decoration: _fieldDec('Username', Icons.person),
+                          onSaved: (v) => username = v ?? '',
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -568,82 +617,94 @@ class InventoryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: 10,
-      color: kDarkSurface,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Inventory", style: titleStyle.copyWith(fontSize: 18)),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 80,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: state.owned.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (_, i) {
-                  final item = state.owned[i];
-                  final equipped = state.equippedId == item.id;
-                  final isSelected = selected == item.id;
-                  return GestureDetector(
-                    onTap: () => onSelect(item.id),
-                    child: Stack(
-                      children: [
-                        Container(
-                          width: 70,
-                          decoration: BoxDecoration(
-                            color: kScaffold,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected ? kAccent : Colors.white24,
-                              width: isSelected ? 3 : 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: Image.asset(
-                              item.assetPath,
-                              width: 36,
-                              height: 36,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                        if (equipped)
-                          const Positioned(
-                            right: 2,
-                            top: 2,
-                            child: Icon(
-                              Icons.check_circle,
-                              size: 18,
-                              color: kAccent,
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
+    return FutureBuilder(
+      future: state.getCoins(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          state.coins = snapshot.data!;
+        } else if (snapshot.hasError) {
+          print("Error fetching coins: ${snapshot.error}");
+          state.coins = 0; // Fallback if error occurs
+        }
+
+        return Material(
+          elevation: 10,
+          color: kDarkSurface,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onEquip,
-                    child: const Text('Equip'),
+                Text("Inventory", style: titleStyle.copyWith(fontSize: 18)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 80,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: state.owned.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (_, i) {
+                      final item = state.owned[i];
+                      final equipped = state.equippedId == item.id;
+                      final isSelected = selected == item.id;
+                      return GestureDetector(
+                        onTap: () => onSelect(item.id),
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: 70,
+                              decoration: BoxDecoration(
+                                color: kScaffold,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected ? kAccent : Colors.white24,
+                                  width: isSelected ? 3 : 1,
+                                ),
+                              ),
+                              child: Center(
+                                child: Image.asset(
+                                  item.assetPath,
+                                  width: 36,
+                                  height: 36,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                            if (equipped)
+                              const Positioned(
+                                right: 2,
+                                top: 2,
+                                child: Icon(
+                                  Icons.check_circle,
+                                  size: 18,
+                                  color: kAccent,
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text("Coins: ${state.coins}", style: bodyWhite),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: onEquip,
+                        child: const Text('Equip'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text("Coins: ${state.coins}", style: bodyWhite),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -653,7 +714,7 @@ class InventoryBar extends StatelessWidget {
 class GoalsStatsView extends StatefulWidget {
   final AppState state;
   const GoalsStatsView({super.key, required this.state});
-  
+
   @override
   State<GoalsStatsView> createState() => _GoalsStatsViewState();
 }
@@ -789,9 +850,7 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
               height: 200,
               child: CustomPaint(
                 painter: LineChartPainter(widget.state.dailyMinutes),
-                child: const Center(
-
-                ),
+                child: const Center(),
               ),
             ),
           ),
@@ -981,7 +1040,11 @@ class LineChartPainter extends CustomPainter {
     // Y labels
     for (double yVal = 0; yVal <= maxVal; yVal += dyStep) {
       final y = size.height - padding - (yVal / maxVal) * chartHeight;
-      canvas.drawLine(Offset(padding - 4, y), Offset(size.width - padding, y), axisPaint);
+      canvas.drawLine(
+        Offset(padding - 4, y),
+        Offset(size.width - padding, y),
+        axisPaint,
+      );
 
       final tp = TextPainter(
         text: TextSpan(text: yVal.toInt().toString(), style: labelStyle),
@@ -1001,12 +1064,19 @@ class LineChartPainter extends CustomPainter {
     }
 
     // X and Y lines
-    canvas.drawLine(Offset(padding, padding), Offset(padding, size.height - padding), axisPaint);
-    canvas.drawLine(Offset(padding, size.height - padding), Offset(size.width - padding, size.height - padding), axisPaint);
-
+    canvas.drawLine(
+      Offset(padding, padding),
+      Offset(padding, size.height - padding),
+      axisPaint,
+    );
+    canvas.drawLine(
+      Offset(padding, size.height - padding),
+      Offset(size.width - padding, size.height - padding),
+      axisPaint,
+    );
 
     // Title
-    
+
     final titleTp = TextPainter(
       text: TextSpan(
         text: 'User Screen Time (mins)',
@@ -1015,13 +1085,15 @@ class LineChartPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    titleTp.paint(canvas, Offset(
-      (size.width - titleTp.width) / 2,
-      padding / 2 - titleTp.height / 2,
-    ));
+    titleTp.paint(
+      canvas,
+      Offset(
+        (size.width - titleTp.width) / 2,
+        padding / 2 - titleTp.height / 2,
+      ),
+    );
 
     /*-----------------------Drawing the Default Lines---------------------*/
-
 
     final averageMinutesPath = Path();
     for (int i = 0; i < averageDailyMinutes.length; i++) {
@@ -1040,7 +1112,10 @@ class LineChartPainter extends CustomPainter {
     // Middle of average line
     final avgMidIndex = (averageDailyMinutes.length / 2).floor();
     final avgMidX = padding + avgMidIndex * dx;
-    final avgMidY = size.height - padding - (averageDailyMinutes[avgMidIndex] / maxVal) * chartHeight;
+    final avgMidY =
+        size.height -
+        padding -
+        (averageDailyMinutes[avgMidIndex] / maxVal) * chartHeight;
 
     final avgLabel = TextPainter(
       text: const TextSpan(
@@ -1051,12 +1126,6 @@ class LineChartPainter extends CustomPainter {
     )..layout();
 
     avgLabel.paint(canvas, Offset(avgMidX - avgLabel.width / 2, avgMidY - 14));
-
-    
-
-
-
-
 
     final healthyMinutesPath = Path();
     for (int i = 0; i < healthyDailyMinutes.length; i++) {
@@ -1071,11 +1140,14 @@ class LineChartPainter extends CustomPainter {
         healthyMinutesPath.lineTo(x, y);
       }
     }
-    
+
     // Middle of healthy line
     final healthyMidIndex = (healthyDailyMinutes.length / 2).floor();
     final healthyMidX = padding + healthyMidIndex * dx;
-    final healthyMidY = size.height - padding - (healthyDailyMinutes[healthyMidIndex] / maxVal) * chartHeight;
+    final healthyMidY =
+        size.height -
+        padding -
+        (healthyDailyMinutes[healthyMidIndex] / maxVal) * chartHeight;
 
     final healthyLabel = TextPainter(
       text: const TextSpan(
@@ -1085,10 +1157,10 @@ class LineChartPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    healthyLabel.paint(canvas, Offset(healthyMidX - healthyLabel.width / 2, healthyMidY - 14));
-
-
-
+    healthyLabel.paint(
+      canvas,
+      Offset(healthyMidX - healthyLabel.width / 2, healthyMidY - 14),
+    );
 
     canvas.drawPath(averageMinutesPath, averageMinutesColor);
     canvas.drawPath(healthyMinutesPath, healthyMinutesColor);
@@ -1115,13 +1187,16 @@ class LineChartPainter extends CustomPainter {
     final userLabel = TextPainter(
       text: const TextSpan(
         text: "You",
-        style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: Colors.white70,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
 
     userLabel.paint(canvas, Offset(userX + 4, userY - 6));
-
   }
 
   @override
@@ -1198,10 +1273,7 @@ class BarChart extends StatelessWidget {
                 child: Center(
                   child: Text(
                     days[i],
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 10,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ),
               );
