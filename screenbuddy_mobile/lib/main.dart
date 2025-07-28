@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 import 'shop.dart';
 
@@ -94,6 +94,15 @@ class AppState {
   int coins = 1500;
   String? pendingEmailCode;
   int goalMinutes = 0;
+
+  List<Map<String, dynamic>> allGoals = [];
+  Map<String, dynamic> currentGoal = {
+    "targetMinutes": 1,
+    "completedMinutes": 0,
+    "title": "False Goal",
+  };
+  String currentGoalId = "";
+
   String? token;
 
   final List<AvatarItem> owned = [
@@ -107,14 +116,12 @@ class AppState {
 
   int equippedId = 0;
 
-  final List<int> dailyMinutes = List.generate(
-    7,
-    (_) => 90 + Random().nextInt(120),
-  );
-  final List<int> goalsMetPerWeek = List.generate(
-    6,
-    (_) => Random().nextInt(7),
-  );
+  // final List<int> dailyMinutes = List.generate(
+  //   7,
+  //   (_) => 90 + Random().nextInt(120),
+  // );
+  List<int> dailyMinutes = List.filled(7, 0);
+  List<int> goalsMetPerWeek = List.filled(7, 0);
 
   void equip(int id) => equippedId = id;
   AvatarItem byId(int id) => owned.firstWhere((e) => e.id == id);
@@ -156,6 +163,196 @@ class AppState {
 
     // coins = responseData['user']['coins'] ?? 0;
     return responseData['user']['coins'] ?? 0;
+  }
+
+  Future<List<int>> getDailyMinutes() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/metrics/screentime'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      print("Failed to fetch daily minutes: ${response.statusCode}");
+      return List.filled(7, 0);
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Failed to fetch daily minutes: Empty response body");
+      return List.filled(7, 0);
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['screentime'] == null) {
+      print("Failed to fetch daily minutes: No screentime data found");
+      return List.filled(7, 0);
+    }
+
+    List<int> dailyMinutes = List.filled(7, 0);
+    responseData['screentime'].forEach((key, value) {
+      final date = DateTime.parse(key);
+      if (date.weekday >= 1 && date.weekday <= 7) {
+        dailyMinutes[date.weekday - 1] = value.toInt();
+      }
+    });
+
+    return dailyMinutes;
+  }
+
+  Future<List<int>> getGoalsMetPerWeek() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/metrics/weeklygoals'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      print("Failed to fetch goals met: ${response.statusCode}");
+      return List.filled(6, 0);
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Failed to fetch goals met: Empty response body");
+      return List.filled(6, 0);
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['weeklyGoals'] == null) {
+      print("Failed to fetch goals met: No weeklyGoals data found");
+      return List.filled(6, 0);
+    }
+
+    List<int> weeklyGoals = List.filled(7, 0);
+    responseData['weeklyGoals'].forEach((key, value) {
+      final date = DateTime.parse(key);
+      if (date.weekday >= 1 && date.weekday <= 7) {
+        weeklyGoals[date.weekday - 1] = value;
+      }
+    });
+
+    return weeklyGoals;
+  }
+
+  Future<int> getCurrentGoalMinutes() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/goals/active'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      print("Failed to fetch current goal minutes: ${response.statusCode}");
+      return 0;
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Failed to fetch current goal minutes: Empty response body");
+      return 0;
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['goal'] == null) {
+      print("Failed to fetch current goal minutes: No goal data found");
+      return 0;
+    }
+
+    return responseData['goal']['targetMinutes'] ?? 0;
+  }
+
+  Future<Map<String, dynamic>> getCurrentGoalInfo() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/goals/active'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    final Map<String, dynamic> defaultResponse = {
+      "targetMinutes": 1,
+      "completedMinutes": 0,
+    };
+
+    if (response.statusCode != 200) {
+      print("Failed to fetch current goal: ${response.statusCode}");
+      return defaultResponse;
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Failed to fetch current goal: Empty response body");
+      return defaultResponse;
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['goal'] == null) {
+      print("Failed to fetch current goal: No goal data found");
+      return defaultResponse;
+    }
+
+    return responseData['goal'] ?? defaultResponse;
+  }
+
+  Future<List<Map<String, dynamic>>> getAllGoals() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/goals/all'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    final List<Map<String, dynamic>> defaultResponse = [
+      {
+        "targetMinutes": 1,
+        "completedMinutes": 0,
+        "title": "False Goal",
+        "_id": "false_goal",
+      },
+    ];
+
+    if (response.statusCode != 200) {
+      print("Failed to fetch all goals: ${response.statusCode}");
+      return defaultResponse;
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Failed to fetch goals: Empty response body");
+      return defaultResponse;
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['goals'] == null) {
+      print("Failed to fetch goals: No goals data found");
+      return defaultResponse;
+    }
+
+    print("Fetched goals: ${responseData['goals']}");
+
+    final List<Map<String, dynamic>> allGoals = List<Map<String, dynamic>>.from(
+      responseData['goals'],
+    );
+
+    return allGoals;
+  }
+
+  Map<String, dynamic> getGoalbyId(String id) {
+    return allGoals.firstWhere(
+      (goal) => goal['_id'] == id,
+      orElse: () => {
+        "targetMinutes": 1,
+        "completedMinutes": 0,
+        "title": "False Goal",
+      },
+    );
   }
 }
 
@@ -506,6 +703,42 @@ class _MainViewState extends State<MainView> {
     );
   }
 
+  // init state and call widget.state.getDailyMinutes
+  @override
+  void initState() {
+    super.initState();
+    widget.state.getDailyMinutes().then((value) {
+      setState(() {
+        print("Daily Minutes: $value");
+        widget.state.dailyMinutes = value;
+      });
+    });
+    widget.state.getGoalsMetPerWeek().then((value) {
+      setState(() {
+        widget.state.goalsMetPerWeek = value;
+      });
+    });
+
+    widget.state.getCurrentGoalMinutes().then((value) {
+      setState(() {
+        widget.state.goalMinutes = value;
+      });
+    });
+
+    widget.state.getCurrentGoalInfo().then((value) {
+      setState(() {
+        widget.state.currentGoalId = value['_id'];
+        widget.state.currentGoal = value;
+      });
+    });
+
+    widget.state.getAllGoals().then((value) {
+      setState(() {
+        widget.state.allGoals = value;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final equipped = widget.state.byId(widget.state.equippedId);
@@ -739,7 +972,9 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
 
   String _formatGoal(int minutes) {
     final h = minutes ~/ 60;
+    print("hours: $h");
     final m = minutes % 60;
+    print("minutes: $m");
     return "${h}h ${m.toString().padLeft(2, '0')}m";
   }
 
@@ -768,22 +1003,71 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  // dropdown to select which goal
+                  DropdownButton<String>(
+                    value: widget.state.currentGoalId,
+                    dropdownColor: kDarkSurface,
+                    iconEnabledColor: kAccent,
+                    style: bodyWhite.copyWith(fontSize: 16),
+                    items: widget.state.allGoals.map((goal) {
+                      print("Goal: ${goal['_id']} - ${goal['title']}");
+                      return DropdownMenuItem<String>(
+                        value: goal['_id'],
+                        key: Key(goal['_id']),
+                        child: Text("${goal['title']}"),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          widget.state.goalMinutes = widget.state.getGoalbyId(
+                            val.toString(),
+                          )['targetMinutes'];
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
                   Text(
                     "Current Goal: ${_formatGoal(widget.state.goalMinutes)}",
                     style: bodyWhite.copyWith(fontSize: 16),
                   ),
+
                   const SizedBox(height: 16),
-                  Slider(
-                    value: goalMinutes.toDouble(),
-                    min: 0,
-                    max: 1440,
-                    divisions: 144, // steps of 10 minutes
-                    label: _formatGoal(goalMinutes),
-                    activeColor: kAccent,
-                    inactiveColor: Colors.white24,
-                    onChanged: (v) => setState(() => goalMinutes = v.toInt()),
+                  LinearProgressIndicator(
+                    value:
+                        widget.state.currentGoal['completedMinutes'] /
+                        widget.state.currentGoal['targetMinutes'],
+                    backgroundColor: Colors.white24,
+                    color: kAccent,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("0 m", style: bodyWhite),
+                      Text(
+                        widget.state.currentGoal['targetMinutes'] == null
+                            ? "24 h"
+                            : _formatGoal(
+                                widget.state.currentGoal['targetMinutes'],
+                              ),
+                        style: bodyWhite,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
+                  Slider(
+                    min: 0,
+                    max: 1440,
+                    value: (widget.state.goalMinutes).toDouble(),
+                    divisions: 144, // steps of 10 minutes
+                    label: _formatGoal(widget.state.goalMinutes),
+                    activeColor: kAccent,
+                    inactiveColor: Colors.white24,
+                    onChanged: (v) =>
+                        setState(() => widget.state.goalMinutes = v.toInt()),
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1128,6 +1412,7 @@ class LineChartPainter extends CustomPainter {
     canvas.drawPath(averageMinutesPath, averageMinutesColor);
     canvas.drawPath(healthyMinutesPath, healthyMinutesColor);
 
+    print("Line Chart Data: ${jsonEncode(data)}");
     if (data.isEmpty) return;
 
     /*------------------Drawing User Data Line-----------------------------*/
@@ -1176,6 +1461,7 @@ class BarChart extends StatelessWidget {
     final maxVal = data.isEmpty ? 1 : data.reduce(max);
     const barHeight = 100.0;
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    print("Bar Chart Data: ${jsonEncode(data)}");
 
     return SizedBox(
       height: barHeight + 30, // extra room to prevent overflow
@@ -1194,6 +1480,7 @@ class BarChart extends StatelessWidget {
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
+
               children: List.generate(data.length, (i) {
                 final height = maxVal == 0 ? 0 : (data[i] / maxVal) * barHeight;
                 return Expanded(
