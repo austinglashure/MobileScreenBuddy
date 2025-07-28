@@ -1,5 +1,10 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'shop.dart';
 
 void main() => runApp(MyApp());
 
@@ -89,6 +94,7 @@ class AppState {
   int coins = 1500;
   String? pendingEmailCode;
   int goalMinutes = 0;
+  String? token;
 
   final List<AvatarItem> owned = [
     AvatarItem(
@@ -97,215 +103,7 @@ class AppState {
       id: 0,
     ),
   ];
-
-  /*-----------------Shop Items-------------------------*/
-
-  final List<AvatarItem> shop = [
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleGreen.png',
-      name: "Green Triangle",
-      id: 1,
-      price: 100,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleBlue.png',
-      name: "Blue Triangle",
-      id: 2,
-      price: 100,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleOrange.png',
-      name: "Orange Triangle",
-      id: 3,
-      price: 100,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleWhite.png',
-      name: "White Triangle",
-      id: 4,
-      price: 100,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleBlack.png',
-      name: "Black Triangle",
-      id: 5,
-      price: 100,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/trianglePink.png',
-      name: "Pink Triangle",
-      id: 6,
-      price: 100,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/square/squareRed.png',
-      name: "Red square",
-      id: 7,
-      price: 250,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/square/squareGreen.png',
-      name: "Green square",
-      id: 8,
-      price: 250,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/square/squareBlue.png',
-      name: "Blue square",
-      id: 9,
-      price: 250,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/square/squareOrange.png',
-      name: "Orange square",
-      id: 10,
-      price: 250,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/square/squareWhite.png',
-      name: "White square",
-      id: 11,
-      price: 250,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/square/squareBlack.png',
-      name: "Black square",
-      id: 12,
-      price: 250,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/square/squarePink.png',
-      name: "Pink square",
-      id: 13,
-      price: 250,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/pentagon/pentagonRed.png',
-      name: "Red pentagon",
-      id: 14,
-      price: 500,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/pentagon/pentagonGreen.png',
-      name: "Green pentagon",
-      id: 15,
-      price: 500,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/pentagon/pentagonBlue.png',
-      name: "Blue pentagon",
-      id: 16,
-      price: 500,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/pentagon/pentagonOrange.png',
-      name: "Orange pentagon",
-      id: 17,
-      price: 500,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/pentagon/pentagonWhite.png',
-      name: "White pentagon",
-      id: 18,
-      price: 500,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/pentagon/pentagonBlack.png',
-      name: "Black pentagon",
-      id: 19,
-      price: 500,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/pentagon/pentagonPink.png',
-      name: "Pink pentagon",
-      id: 20,
-      price: 500,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/hexagon/hexagonRed.png',
-      name: "Red hexagon",
-      id: 21,
-      price: 1000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/hexagon/hexagonGreen.png',
-      name: "Green hexagon",
-      id: 22,
-      price: 1000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/hexagon/hexagonBlue.png',
-      name: "Blue hexagon",
-      id: 23,
-      price: 1000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/hexagon/hexagonOrange.png',
-      name: "Orange hexagon",
-      id: 24,
-      price: 1000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/hexagon/hexagonWhite.png',
-      name: "White hexagon",
-      id: 25,
-      price: 1000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/hexagon/hexagonBlack.png',
-      name: "Black hexagon",
-      id: 26,
-      price: 1000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/hexagon/hexagonPink.png',
-      name: "Pink hexagon",
-      id: 27,
-      price: 1000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/circle/circleRed.png',
-      name: "Red circle",
-      price: 2000,
-      id: 28,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/circle/circleGreen.png',
-      name: "Green circle",
-      id: 29,
-      price: 2000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/circle/circleBlue.png',
-      name: "Blue circle",
-      id: 30,
-      price: 2000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/circle/circleOrange.png',
-      name: "Orange circle",
-      id: 31,
-      price: 2000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/circle/circleWhite.png',
-      name: "White circle",
-      id: 32,
-      price: 2000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/circle/circleBlack.png',
-      name: "Black circle",
-      id: 33,
-      price: 2000,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/circle/circlePink.png',
-      name: "Pink circle",
-      id: 34,
-      price: 2000,
-    ),
-  ];
+  final List<AvatarItem> shop = shopList;
 
   int equippedId = 0;
 
@@ -329,19 +127,36 @@ class AppState {
     }
     return false;
   }
-}
 
-class AvatarItem {
-  final String assetPath;
-  final String name;
-  final int id;
-  final int price;
-  AvatarItem({
-    required this.assetPath,
-    required this.name,
-    required this.id,
-    this.price = 0,
-  });
+  Future<int> getCoins() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/user'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      print("Login failed by status code: ${response.statusCode}");
+      return 0;
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Login failed: Empty response body");
+      return 0;
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['user'] == null) {
+      print("Login failed: No user data found");
+      return 0;
+    }
+
+    // coins = responseData['user']['coins'] ?? 0;
+    return responseData['user']['coins'] ?? 0;
+  }
 }
 
 /* ============================ AUTH SCREEN ============================== */
@@ -358,6 +173,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   String email = "";
   String password = "";
+  String username = "";
 
   InputDecoration _fieldDec(String label, IconData icon) => InputDecoration(
     labelText: label,
@@ -371,9 +187,34 @@ class _AuthScreenState extends State<AuthScreen> {
     ),
   );
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
     _formKey.currentState?.save();
     if (showLogin) {
+      final response = await http.post(
+        Uri.parse('https://cometcontacts4331.com/api/login'),
+        body: jsonEncode({'username': username, 'password': password}),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode != 200) {
+        print("Login failed by status code: ${response.statusCode}");
+        return;
+      }
+
+      final body = response.body;
+      if (body.isEmpty) {
+        print("Login failed: Empty response body");
+        return;
+      }
+
+      final responseData = jsonDecode(body);
+      if (responseData['user'] == null) {
+        print("Login failed: No user data found");
+        return;
+      }
+
+      widget.state.token = responseData['token'];
+
       widget.state.loggedIn = true;
       Navigator.pushReplacement(
         context,
@@ -442,14 +283,33 @@ class _AuthScreenState extends State<AuthScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
+                        showLogin
+                            ? const SizedBox.shrink()
+                            : Column(
+                                children: [
+                                  TextFormField(
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: kFont,
+                                    ),
+                                    cursorColor: Colors.white,
+                                    decoration: _fieldDec(
+                                      'Email',
+                                      Icons.person_pin,
+                                    ),
+                                    onSaved: (v) => email = v ?? '',
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
                         TextFormField(
                           style: const TextStyle(
                             color: Colors.white,
                             fontFamily: kFont,
                           ),
                           cursorColor: Colors.white,
-                          decoration: _fieldDec('Email', Icons.person),
-                          onSaved: (v) => email = v ?? '',
+                          decoration: _fieldDec('Username', Icons.person),
+                          onSaved: (v) => username = v ?? '',
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -754,82 +614,94 @@ class InventoryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: 10,
-      color: kDarkSurface,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Inventory", style: titleStyle.copyWith(fontSize: 18)),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 80,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: state.owned.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (_, i) {
-                  final item = state.owned[i];
-                  final equipped = state.equippedId == item.id;
-                  final isSelected = selected == item.id;
-                  return GestureDetector(
-                    onTap: () => onSelect(item.id),
-                    child: Stack(
-                      children: [
-                        Container(
-                          width: 70,
-                          decoration: BoxDecoration(
-                            color: kScaffold,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected ? kAccent : Colors.white24,
-                              width: isSelected ? 3 : 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: Image.asset(
-                              item.assetPath,
-                              width: 36,
-                              height: 36,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                        if (equipped)
-                          const Positioned(
-                            right: 2,
-                            top: 2,
-                            child: Icon(
-                              Icons.check_circle,
-                              size: 18,
-                              color: kAccent,
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
+    return FutureBuilder(
+      future: state.getCoins(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          state.coins = snapshot.data!;
+        } else if (snapshot.hasError) {
+          print("Error fetching coins: ${snapshot.error}");
+          state.coins = 0; // Fallback if error occurs
+        }
+
+        return Material(
+          elevation: 10,
+          color: kDarkSurface,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onEquip,
-                    child: const Text('Equip'),
+                Text("Inventory", style: titleStyle.copyWith(fontSize: 18)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 80,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: state.owned.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (_, i) {
+                      final item = state.owned[i];
+                      final equipped = state.equippedId == item.id;
+                      final isSelected = selected == item.id;
+                      return GestureDetector(
+                        onTap: () => onSelect(item.id),
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: 70,
+                              decoration: BoxDecoration(
+                                color: kScaffold,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected ? kAccent : Colors.white24,
+                                  width: isSelected ? 3 : 1,
+                                ),
+                              ),
+                              child: Center(
+                                child: Image.asset(
+                                  item.assetPath,
+                                  width: 36,
+                                  height: 36,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                            if (equipped)
+                              const Positioned(
+                                right: 2,
+                                top: 2,
+                                child: Icon(
+                                  Icons.check_circle,
+                                  size: 18,
+                                  color: kAccent,
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text("Coins: ${state.coins}", style: bodyWhite),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: onEquip,
+                        child: const Text('Equip'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text("Coins: ${state.coins}", style: bodyWhite),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
