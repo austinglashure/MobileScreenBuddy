@@ -102,6 +102,7 @@ class AppState {
     "title": "False Goal",
   };
   String currentGoalId = "";
+  Map<String, dynamic> user = {};
 
   String? token;
 
@@ -144,7 +145,7 @@ class AppState {
       },
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       print("Login failed by status code: ${response.statusCode}");
       return 0;
     }
@@ -174,7 +175,7 @@ class AppState {
       },
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       print("Failed to fetch daily minutes: ${response.statusCode}");
       return List.filled(7, 0);
     }
@@ -211,7 +212,7 @@ class AppState {
       },
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       print("Failed to fetch goals met: ${response.statusCode}");
       return List.filled(6, 0);
     }
@@ -248,7 +249,7 @@ class AppState {
       },
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       print("Failed to fetch current goal minutes: ${response.statusCode}");
       return 0;
     }
@@ -281,7 +282,7 @@ class AppState {
       "completedMinutes": 0,
     };
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       print("Failed to fetch current goal: ${response.statusCode}");
       return defaultResponse;
     }
@@ -318,7 +319,7 @@ class AppState {
       },
     ];
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       print("Failed to fetch all goals: ${response.statusCode}");
       return defaultResponse;
     }
@@ -384,6 +385,32 @@ class _AuthScreenState extends State<AuthScreen> {
     ),
   );
 
+  Future<bool> tryRegister() async {
+    final response = await http.post(
+      Uri.parse('https://cometcontacts4331.com/api/register'),
+      body: jsonEncode({
+        'email': email,
+        'username': username,
+        'password': password,
+      }),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Registration failed by status code: ${response.statusCode}");
+      return false;
+    }
+
+    final result = jsonDecode(response.body);
+    if (result['user'] == null) {
+      print("Registration failed: No user data found");
+      return false;
+    }
+
+    widget.state.user = result['user'];
+    return true;
+  }
+
   Future<void> _handleSubmit() async {
     _formKey.currentState?.save();
     if (showLogin) {
@@ -393,7 +420,7 @@ class _AuthScreenState extends State<AuthScreen> {
         headers: {'Content-Type': 'application/json'},
       );
 
-      if (response.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 201) {
         print("Login failed by status code: ${response.statusCode}");
         return;
       }
@@ -418,14 +445,19 @@ class _AuthScreenState extends State<AuthScreen> {
         MaterialPageRoute(builder: (_) => MainView(state: widget.state)),
       );
     } else {
-      widget.state.pendingEmailCode = _generateCode();
+      // widget.state.pendingEmailCode = _generateCode();
       // TODO: API call to send widget.state.pendingEmailCode to the user's email
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VerifyPinScreen(state: widget.state, email: email),
-        ),
-      );
+
+      final registered = await tryRegister();
+
+      if (registered) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VerifyPinScreen(state: widget.state, email: email),
+          ),
+        );
+      }
     }
   }
 
@@ -585,8 +617,30 @@ class _VerifyPinScreenState extends State<VerifyPinScreen> {
     ),
   );
 
-  void _verify() {
-    if (_pinController.text == widget.state.pendingEmailCode) {
+  Future<bool> tryVerifyEmail(String code) async {
+    final response = await http.post(
+      Uri.parse('https://cometcontacts4331.com/api/verify-email'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': widget.email, 'code': code}),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Email verification failed by status code: ${response.statusCode}");
+      return false;
+    }
+
+    final result = jsonDecode(response.body);
+    if (result['message'] != 'Email has been verified.') {
+      print("Email verification failed: ${result['message']}");
+      return false;
+    }
+
+    return true;
+  }
+
+  void _verify() async {
+    final verifyResult = await tryVerifyEmail(_pinController.text);
+    if (verifyResult) {
       widget.state.loggedIn = true;
       widget.state.pendingEmailCode = null;
       Navigator.pushReplacement(
