@@ -645,7 +645,7 @@ class _VerifyPinScreenState extends State<VerifyPinScreen> {
       widget.state.pendingEmailCode = null;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => MainView(state: widget.state)),
+        MaterialPageRoute(builder: (_) => AuthScreen(state: widget.state)),
       );
     } else {
       ScaffoldMessenger.of(
