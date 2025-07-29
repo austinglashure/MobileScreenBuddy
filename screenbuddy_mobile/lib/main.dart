@@ -323,110 +323,112 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 10),
 
-                // Login/Register title
-                Text(
-                  showLogin ? 'Welcome Back!' : 'Sign Up!',
-                  style: const TextStyle(
-                    color: kAccent,
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: kFont,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Dark background container around form
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        showLogin
-                            ? const SizedBox.shrink()
-                            : Column(
-                                children: [
-                                  TextFormField(
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: kFont,
-                                    ),
-                                    cursorColor: Colors.white,
-                                    decoration: _fieldDec(
-                                      'Email',
-                                      Icons.person_pin,
-                                    ),
-                                    onSaved: (v) => email = v ?? '',
-                                  ),
-                                  const SizedBox(height: 16),
-                                ],
-                              ),
-                        TextFormField(
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontFamily: kFont,
-                          ),
-                          cursorColor: Colors.white,
-                          decoration: _fieldDec('Username', Icons.person),
-                          onSaved: (v) => username = v ?? '',
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontFamily: kFont,
-                          ),
-                          cursorColor: Colors.white,
-                          obscureText: true,
-                          decoration: _fieldDec('Password', Icons.lock),
-                          onSaved: (v) => password = v ?? '',
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: _handleSubmit,
-                          child: Text(showLogin ? 'Login' : 'Register'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => setState(() => showLogin = !showLogin),
-                  child: Text(
-                    showLogin
-                        ? "Don't have an account? Register"
-                        : "Have an account? Login",
+                  // Login/Register title
+                  Text(
+                    showLogin ? 'Welcome Back!' : 'Sign Up!',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: kAccent,
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
                       fontFamily: kFont,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 24),
 
-                const SizedBox(height: 16),
-                Image.asset(
-                  'assets/buddies/triangle/triangleRed.png',
-                  width: 100.0,
-                  height: 100.0,
-                  fit: BoxFit.contain,
-                ),
-              ],
+                  // Dark background container around form
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          showLogin
+                              ? const SizedBox.shrink()
+                              : Column(
+                                  children: [
+                                    TextFormField(
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: kFont,
+                                      ),
+                                      cursorColor: Colors.white,
+                                      decoration: _fieldDec(
+                                        'Email',
+                                        Icons.person_pin,
+                                      ),
+                                      onSaved: (v) => email = v ?? '',
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+                                ),
+                          TextFormField(
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: kFont,
+                            ),
+                            cursorColor: Colors.white,
+                            decoration: _fieldDec('Username', Icons.person),
+                            onSaved: (v) => username = v ?? '',
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: kFont,
+                            ),
+                            cursorColor: Colors.white,
+                            obscureText: true,
+                            decoration: _fieldDec('Password', Icons.lock),
+                            onSaved: (v) => password = v ?? '',
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                            onPressed: _handleSubmit,
+                            child: Text(showLogin ? 'Login' : 'Register'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => setState(() => showLogin = !showLogin),
+                    child: Text(
+                      showLogin
+                          ? "Don't have an account? Register"
+                          : "Have an account? Login",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: kFont,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                  Image.asset(
+                    'assets/buddies/triangle/triangleRed.png',
+                    width: 100.0,
+                    height: 100.0,
+                    fit: BoxFit.contain,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -518,60 +520,65 @@ class _VerifyPinScreenState extends State<VerifyPinScreen> {
         title: const Text("Email Verification"),
         automaticallyImplyLeading: false,
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const SizedBox(height: 85),
-                Text(
-                  "Enter the 6-digit code sent to\n${widget.email}",
-                  textAlign: TextAlign.center,
-                  style: bodyWhite.copyWith(fontSize: 16),
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _pinController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: kFont,
-                    letterSpacing: 4,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 85),
+                  Text(
+                    "Enter the 6-digit code sent to\n${widget.email}",
+                    textAlign: TextAlign.center,
+                    style: bodyWhite.copyWith(fontSize: 16),
                   ),
-                  maxLength: 6,
-                  keyboardType: TextInputType.number,
-                  cursorColor: Colors.white,
-                  decoration: _pinDec(),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(onPressed: _verify, child: const Text("Verify")),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _resend,
-                  child: const Text(
-                    "Resend Code",
-                    style: TextStyle(color: Colors.white, fontFamily: kFont),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _pinController,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontFamily: kFont,
+                      letterSpacing: 4,
+                    ),
+                    maxLength: 6,
+                    keyboardType: TextInputType.number,
+                    cursorColor: Colors.white,
+                    decoration: _pinDec(),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AuthScreen(state: widget.state),
-                      ),
-                      (_) => false,
-                    );
-                  },
-                  child: const Text(
-                    "Back to Login/Register",
-                    style: TextStyle(color: Colors.white, fontFamily: kFont),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: _verify,
+                    child: const Text("Verify"),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _resend,
+                    child: const Text(
+                      "Resend Code",
+                      style: TextStyle(color: Colors.white, fontFamily: kFont),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AuthScreen(state: widget.state),
+                        ),
+                        (_) => false,
+                      );
+                    },
+                    child: const Text(
+                      "Back to Login/Register",
+                      style: TextStyle(color: Colors.white, fontFamily: kFont),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -740,71 +747,73 @@ class _MainViewState extends State<MainView> {
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
       ),
-      body: Stack(
-        children: [
-          Positioned(
-            top: 12,
-            right: 12,
-            child: IconButton(
-              icon: const Icon(Icons.store, color: kAccent),
-              tooltip: "Shop",
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ShopView(state: widget.state),
-                ),
-              ).then((_) => setState(() {})),
-            ),
-          ),
-          Center(
-            child: Transform.translate(
-              offset: const Offset(0, -110),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: kDarkSurface,
-                      borderRadius: BorderRadius.circular(20.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(24),
-                    child: CircleAvatar(
-                      radius: 70,
-                      backgroundColor: Colors.black12,
-                      backgroundImage: AssetImage(equipped.assetPath),
-                    ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned(
+              top: 12,
+              right: 12,
+              child: IconButton(
+                icon: const Icon(Icons.store, color: kAccent),
+                tooltip: "Shop",
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ShopView(state: widget.state),
                   ),
-                  const SizedBox(height: 12),
-                  Text(equipped.name, style: titleStyle),
-                ],
+                ).then((_) => setState(() {})),
               ),
             ),
-          ),
-
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: InventoryBar(
-              state: widget.state,
-              selected: selectedInventoryId,
-              onSelect: (id) => setState(() => selectedInventoryId = id),
-              onEquip: () {
-                if (selectedInventoryId != null) {
-                  setState(() => widget.state.equip(selectedInventoryId!));
-                }
-              },
+            Center(
+              child: Transform.translate(
+                offset: const Offset(0, -110),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: kDarkSurface,
+                        borderRadius: BorderRadius.circular(20.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.4),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(24),
+                      child: CircleAvatar(
+                        radius: 70,
+                        backgroundColor: Colors.black12,
+                        backgroundImage: AssetImage(equipped.assetPath),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(equipped.name, style: titleStyle),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
+
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: InventoryBar(
+                state: widget.state,
+                selected: selectedInventoryId,
+                onSelect: (id) => setState(() => selectedInventoryId = id),
+                onEquip: () {
+                  if (selectedInventoryId != null) {
+                    setState(() => widget.state.equip(selectedInventoryId!));
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -975,87 +984,89 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text("Goals", style: titleStyle),
-          const SizedBox(height: 8),
-          Card(
-            color: kDarkSurface,
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  Text(
-                    "Current Goal: ${_formatGoal(widget.state.goalMinutes)}",
-                    style: bodyWhite.copyWith(fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  Slider(
-                    min: 0,
-                    max: 1440,
-                    value: (_tempGoalMinutes).toDouble(),
-                    divisions: 144, // steps of 10 minutes
-                    label: _formatGoal(_tempGoalMinutes),
-                    activeColor: kAccent,
-                    inactiveColor: Colors.white24,
-                    onChanged: (v) =>
-                        setState(() => _tempGoalMinutes = v.toInt()),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("0 m", style: bodyWhite),
-                      Text("24 h", style: bodyWhite),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _updateGoal,
-                    child: const Text("Update Goal"),
-                  ),
-                ],
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text("Goals", style: titleStyle),
+            const SizedBox(height: 8),
+            Card(
+              color: kDarkSurface,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text("Statistics", style: titleStyle),
-          const SizedBox(height: 8),
-          Card(
-            color: kDarkSurface,
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: SizedBox(
-              height: 200,
-              child: CustomPaint(
-                painter: LineChartPainter(widget.state.lastWeekMinutes),
-                child: const Center(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            color: kDarkSurface,
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: SizedBox(
-              height: 200,
               child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: BarChart(data: widget.state.lastWeekGoals),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Text(
+                      "Current Goal: ${_formatGoal(widget.state.goalMinutes)}",
+                      style: bodyWhite.copyWith(fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Slider(
+                      min: 0,
+                      max: 1440,
+                      value: (_tempGoalMinutes).toDouble(),
+                      divisions: 144, // steps of 10 minutes
+                      label: _formatGoal(_tempGoalMinutes),
+                      activeColor: kAccent,
+                      inactiveColor: Colors.white24,
+                      onChanged: (v) =>
+                          setState(() => _tempGoalMinutes = v.toInt()),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("0 m", style: bodyWhite),
+                        Text("24 h", style: bodyWhite),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _updateGoal,
+                      child: const Text("Update Goal"),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text("Statistics", style: titleStyle),
+            const SizedBox(height: 8),
+            Card(
+              color: kDarkSurface,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: SizedBox(
+                height: 200,
+                child: CustomPaint(
+                  painter: LineChartPainter(widget.state.lastWeekMinutes),
+                  child: const Center(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              color: kDarkSurface,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: SizedBox(
+                height: 200,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: BarChart(data: widget.state.lastWeekGoals),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1090,69 +1101,71 @@ class _ShopViewState extends State<ShopView> {
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: widget.state.shop.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: .9,
-        ),
-        itemBuilder: (_, i) {
-          final item = widget.state.shop[i];
-          return Card(
-            color: kDarkSurface,
-            elevation: 6,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () {
-                final ok = widget.state.buy(item);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      ok ? "Purchased ${item.name}!" : "Not enough coins.",
-                    ),
-                  ),
-                );
-                setState(() {});
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: 110,
-                      child: Image.asset(item.assetPath, fit: BoxFit.contain),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      item.name,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        fontFamily: kFont,
+      body: SafeArea(
+        child: GridView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: widget.state.shop.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: .9,
+          ),
+          itemBuilder: (_, i) {
+            final item = widget.state.shop[i];
+            return Card(
+              color: kDarkSurface,
+              elevation: 6,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  final ok = widget.state.buy(item);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ok ? "Purchased ${item.name}!" : "Not enough coins.",
                       ),
                     ),
-                    const SizedBox(height: 4), // smaller spacing under name
-                    Text(
-                      "${item.price} coins",
-                      style: bodyWhite,
-                      textAlign: TextAlign.center,
-                    ),
-                    const Spacer(), // pushes everything slightly up
-                  ],
+                  );
+                  setState(() {});
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: 110,
+                        child: Image.asset(item.assetPath, fit: BoxFit.contain),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        item.name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          fontFamily: kFont,
+                        ),
+                      ),
+                      const SizedBox(height: 4), // smaller spacing under name
+                      Text(
+                        "${item.price} coins",
+                        style: bodyWhite,
+                        textAlign: TextAlign.center,
+                      ),
+                      const Spacer(), // pushes everything slightly up
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
