@@ -1042,7 +1042,10 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
                 height: 200,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
-                  child: BarChart(data: widget.state.lastWeekGoals),
+                  child: BarChart(
+                    key: ObjectKey(widget.state.lastWeekGoals),
+                    data: widget.state.lastWeekGoals,
+                  ),
                 ),
               ),
             ),
