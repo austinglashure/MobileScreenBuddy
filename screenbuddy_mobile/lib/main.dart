@@ -1410,7 +1410,15 @@ class BarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final maxVal = data.isEmpty ? 1 : data.reduce(max);
     const barHeight = 100.0;
-    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final List<String> days = [
+      '-6 Days',
+      '-5 Days',
+      '-4 Days',
+      '-3 Days',
+      '-2 Days',
+      'Yesterday',
+      'Today',
+    ];
     print("Bar Chart Data: ${jsonEncode(data)}");
 
     return SizedBox(
