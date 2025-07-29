@@ -922,16 +922,16 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
   void _updateGoal() {
     // Goal Counts
     List<int> tempGoals = decideGoals(
-      widget.state.goalMinutes,
+      _tempGoalMinutes,
       widget.state.lastWeekMinutes,
     );
-
     int numTimesGoalMet = tempGoals.reduce((a, b) => a + b);
+    int newCoinTotal = widget.state.coins + numTimesGoalMet * 100;
 
     setState(() {
       widget.state.goalMinutes = _tempGoalMinutes;
-      widget.state.lastWeekMinutes = tempGoals;
-      widget.state.coins += numTimesGoalMet * 100;
+      widget.state.lastWeekGoals = tempGoals;
+      widget.state.coins += newCoinTotal;
     });
     ScaffoldMessenger.of(
       context,
