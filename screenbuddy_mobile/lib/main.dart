@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:usage_stats/usage_stats.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 
 import 'shop.dart';
@@ -118,10 +119,6 @@ class AppState {
 
   int equippedId = 0;
 
-  // final List<int> dailyMinutes = List.generate(
-  //   7,
-  //   (_) => 90 + Random().nextInt(120),
-  // );
   List<int> dailyMinutes = List.filled(7, 0);
   List<int> goalsMetPerWeek = List.filled(7, 0);
 
@@ -758,10 +755,24 @@ class _MainViewState extends State<MainView> {
     );
   }
 
+  Future<void> _loadUsageAndSetState() async {
+    try {
+      UsageStats.grantUsagePermission();
+
+      this.setState(() {
+        widget.state.dailyMinutes = [100, 200, 300, 400, 500, 600, 700];
+      });
+    } catch (err) {
+      print(err);
+    }
+  }
+
   // init state and call widget.state.getDailyMinutes
   @override
   void initState() {
     super.initState();
+    _loadUsageAndSetState();
+
     widget.state.getDailyMinutes().then((value) {
       setState(() {
         print("Daily Minutes: $value");
