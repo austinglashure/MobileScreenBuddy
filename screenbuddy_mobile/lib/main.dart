@@ -999,9 +999,9 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
                   Slider(
                     min: 0,
                     max: 1440,
-                    value: (widget.state.goalMinutes).toDouble(),
+                    value: (_tempGoalMinutes).toDouble(),
                     divisions: 144, // steps of 10 minutes
-                    label: _formatGoal(widget.state.goalMinutes),
+                    label: _formatGoal(_tempGoalMinutes),
                     activeColor: kAccent,
                     inactiveColor: Colors.white24,
                     onChanged: (v) =>
