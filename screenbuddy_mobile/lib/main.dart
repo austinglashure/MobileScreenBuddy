@@ -119,11 +119,7 @@ class AppState {
 
   int equippedId = 0;
 
-  // probably gonna depricate
-  List<int> dailyMinutes = List.filled(7, 0);
-  List<int> goalsMetPerWeek = List.filled(7, 0);
-
-  // new
+  // set on loading of the app
   List<int> lastWeekMinutes = List.filled(7, 0);
   List<int> lastWeekGoals = List.filled(7, 0);
 
@@ -139,6 +135,7 @@ class AppState {
     return false;
   }
 
+  // polled for state setup, subject to change
   Future<int> getCoins() async {
     final response = await http.get(
       Uri.parse('https://cometcontacts4331.com/api/user'),
@@ -169,80 +166,6 @@ class AppState {
     return responseData['user']['coins'] ?? 0;
   }
 
-  Future<List<int>> getDailyMinutes() async {
-    final response = await http.get(
-      Uri.parse('https://cometcontacts4331.com/api/metrics/screentime'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      print("Failed to fetch daily minutes: ${response.statusCode}");
-      return List.filled(7, 0);
-    }
-
-    final body = response.body;
-    if (body.isEmpty) {
-      print("Failed to fetch daily minutes: Empty response body");
-      return List.filled(7, 0);
-    }
-
-    final responseData = jsonDecode(body);
-    if (responseData['screentime'] == null) {
-      print("Failed to fetch daily minutes: No screentime data found");
-      return List.filled(7, 0);
-    }
-
-    List<int> dailyMinutes = List.filled(7, 0);
-    responseData['screentime'].forEach((key, value) {
-      final date = DateTime.parse(key);
-      if (date.weekday >= 1 && date.weekday <= 7) {
-        dailyMinutes[date.weekday - 1] = value.toInt();
-      }
-    });
-
-    return dailyMinutes;
-  }
-
-  Future<List<int>> getGoalsMetPerWeek() async {
-    final response = await http.get(
-      Uri.parse('https://cometcontacts4331.com/api/metrics/weeklygoals'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      print("Failed to fetch goals met: ${response.statusCode}");
-      return List.filled(6, 0);
-    }
-
-    final body = response.body;
-    if (body.isEmpty) {
-      print("Failed to fetch goals met: Empty response body");
-      return List.filled(6, 0);
-    }
-
-    final responseData = jsonDecode(body);
-    if (responseData['weeklyGoals'] == null) {
-      print("Failed to fetch goals met: No weeklyGoals data found");
-      return List.filled(6, 0);
-    }
-
-    List<int> weeklyGoals = List.filled(7, 0);
-    responseData['weeklyGoals'].forEach((key, value) {
-      final date = DateTime.parse(key);
-      if (date.weekday >= 1 && date.weekday <= 7) {
-        weeklyGoals[date.weekday - 1] = value;
-      }
-    });
-
-    return weeklyGoals;
-  }
-
   Future<int> getCurrentGoalMinutes() async {
     final response = await http.get(
       Uri.parse('https://cometcontacts4331.com/api/goals/active'),
@@ -270,93 +193,6 @@ class AppState {
     }
 
     return responseData['goal']['targetMinutes'] ?? 0;
-  }
-
-  Future<Map<String, dynamic>> getCurrentGoalInfo() async {
-    final response = await http.get(
-      Uri.parse('https://cometcontacts4331.com/api/goals/active'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    final Map<String, dynamic> defaultResponse = {
-      "targetMinutes": 1,
-      "completedMinutes": 0,
-    };
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      print("Failed to fetch current goal: ${response.statusCode}");
-      return defaultResponse;
-    }
-
-    final body = response.body;
-    if (body.isEmpty) {
-      print("Failed to fetch current goal: Empty response body");
-      return defaultResponse;
-    }
-
-    final responseData = jsonDecode(body);
-    if (responseData['goal'] == null) {
-      print("Failed to fetch current goal: No goal data found");
-      return defaultResponse;
-    }
-
-    return responseData['goal'] ?? defaultResponse;
-  }
-
-  Future<List<Map<String, dynamic>>> getAllGoals() async {
-    final response = await http.get(
-      Uri.parse('https://cometcontacts4331.com/api/goals/all'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    final List<Map<String, dynamic>> defaultResponse = [
-      {
-        "targetMinutes": 1,
-        "completedMinutes": 0,
-        "title": "False Goal",
-        "_id": "false_goal",
-      },
-    ];
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      print("Failed to fetch all goals: ${response.statusCode}");
-      return defaultResponse;
-    }
-
-    final body = response.body;
-    if (body.isEmpty) {
-      print("Failed to fetch goals: Empty response body");
-      return defaultResponse;
-    }
-
-    final responseData = jsonDecode(body);
-    if (responseData['goals'] == null) {
-      print("Failed to fetch goals: No goals data found");
-      return defaultResponse;
-    }
-
-    print("Fetched goals: ${responseData['goals']}");
-
-    final List<Map<String, dynamic>> allGoals = List<Map<String, dynamic>>.from(
-      responseData['goals'],
-    );
-
-    return allGoals;
-  }
-
-  Map<String, dynamic> getGoalbyId(String id) {
-    return allGoals.firstWhere(
-      (goal) => goal['_id'] == id,
-      orElse: () => {
-        "targetMinutes": 1,
-        "completedMinutes": 0,
-        "title": "False Goal",
-      },
-    );
   }
 }
 
@@ -868,19 +704,6 @@ class _MainViewState extends State<MainView> {
   @override
   void initState() {
     super.initState();
-    _loadUsageAndSetState();
-
-    widget.state.getDailyMinutes().then((value) {
-      setState(() {
-        print("Daily Minutes: $value");
-        widget.state.dailyMinutes = value;
-      });
-    });
-    widget.state.getGoalsMetPerWeek().then((value) {
-      setState(() {
-        widget.state.goalsMetPerWeek = value;
-      });
-    });
 
     widget.state.getCurrentGoalMinutes().then((value) {
       setState(() {
@@ -888,18 +711,13 @@ class _MainViewState extends State<MainView> {
       });
     });
 
-    widget.state.getCurrentGoalInfo().then((value) {
+    widget.state.getCoins().then((value) {
       setState(() {
-        widget.state.currentGoalId = value['_id'];
-        widget.state.currentGoal = value;
+        widget.state.coins = value;
       });
     });
 
-    widget.state.getAllGoals().then((value) {
-      setState(() {
-        widget.state.allGoals = value;
-      });
-    });
+    _loadUsageAndSetState();
   }
 
   @override
@@ -1166,58 +984,10 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // dropdown to select which goal
-                  DropdownButton<String>(
-                    value: widget.state.currentGoalId,
-                    dropdownColor: kDarkSurface,
-                    iconEnabledColor: kAccent,
-                    style: bodyWhite.copyWith(fontSize: 16),
-                    items: widget.state.allGoals.map((goal) {
-                      print("Goal: ${goal['_id']} - ${goal['title']}");
-                      return DropdownMenuItem<String>(
-                        value: goal['_id'],
-                        key: Key(goal['_id']),
-                        child: Text("${goal['title']}"),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() {
-                          widget.state.goalMinutes = widget.state.getGoalbyId(
-                            val.toString(),
-                          )['targetMinutes'];
-                        });
-                      }
-                    },
-                  ),
                   const SizedBox(height: 12),
-
                   Text(
                     "Current Goal: ${_formatGoal(widget.state.goalMinutes)}",
                     style: bodyWhite.copyWith(fontSize: 16),
-                  ),
-
-                  const SizedBox(height: 16),
-                  LinearProgressIndicator(
-                    value:
-                        widget.state.currentGoal['completedMinutes'] /
-                        widget.state.currentGoal['targetMinutes'],
-                    backgroundColor: Colors.white24,
-                    color: kAccent,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("0 m", style: bodyWhite),
-                      Text(
-                        widget.state.currentGoal['targetMinutes'] == null
-                            ? "24 h"
-                            : _formatGoal(
-                                widget.state.currentGoal['targetMinutes'],
-                              ),
-                        style: bodyWhite,
-                      ),
-                    ],
                   ),
                   const SizedBox(height: 8),
                   Slider(
