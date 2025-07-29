@@ -1243,10 +1243,7 @@ class _ShopViewState extends State<ShopView> {
                   children: [
                     SizedBox(
                       height: 110,
-                      child: Image.asset(
-                        item.assetPath,
-                        fit: BoxFit.contain,
-                      ),
+                      child: Image.asset(item.assetPath, fit: BoxFit.contain),
                     ),
                     const SizedBox(height: 10),
                     Text(
