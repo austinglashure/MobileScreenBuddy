@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:usage_stats/usage_stats.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 
 import 'shop.dart';
+import 'screentime.dart';
 
 void main() => runApp(MyApp());
 
@@ -117,12 +119,9 @@ class AppState {
 
   int equippedId = 0;
 
-  // final List<int> dailyMinutes = List.generate(
-  //   7,
-  //   (_) => 90 + Random().nextInt(120),
-  // );
-  List<int> dailyMinutes = List.filled(7, 0);
-  List<int> goalsMetPerWeek = List.filled(7, 0);
+  // set on loading of the app
+  List<int> lastWeekMinutes = List.filled(7, 0);
+  List<int> lastWeekGoals = List.filled(7, 0);
 
   void equip(int id) => equippedId = id;
   AvatarItem byId(int id) => owned.firstWhere((e) => e.id == id);
@@ -136,6 +135,7 @@ class AppState {
     return false;
   }
 
+  // polled for state setup, subject to change
   Future<int> getCoins() async {
     final response = await http.get(
       Uri.parse('https://cometcontacts4331.com/api/user'),
@@ -166,80 +166,6 @@ class AppState {
     return responseData['user']['coins'] ?? 0;
   }
 
-  Future<List<int>> getDailyMinutes() async {
-    final response = await http.get(
-      Uri.parse('https://cometcontacts4331.com/api/metrics/screentime'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      print("Failed to fetch daily minutes: ${response.statusCode}");
-      return List.filled(7, 0);
-    }
-
-    final body = response.body;
-    if (body.isEmpty) {
-      print("Failed to fetch daily minutes: Empty response body");
-      return List.filled(7, 0);
-    }
-
-    final responseData = jsonDecode(body);
-    if (responseData['screentime'] == null) {
-      print("Failed to fetch daily minutes: No screentime data found");
-      return List.filled(7, 0);
-    }
-
-    List<int> dailyMinutes = List.filled(7, 0);
-    responseData['screentime'].forEach((key, value) {
-      final date = DateTime.parse(key);
-      if (date.weekday >= 1 && date.weekday <= 7) {
-        dailyMinutes[date.weekday - 1] = value.toInt();
-      }
-    });
-
-    return dailyMinutes;
-  }
-
-  Future<List<int>> getGoalsMetPerWeek() async {
-    final response = await http.get(
-      Uri.parse('https://cometcontacts4331.com/api/metrics/weeklygoals'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      print("Failed to fetch goals met: ${response.statusCode}");
-      return List.filled(6, 0);
-    }
-
-    final body = response.body;
-    if (body.isEmpty) {
-      print("Failed to fetch goals met: Empty response body");
-      return List.filled(6, 0);
-    }
-
-    final responseData = jsonDecode(body);
-    if (responseData['weeklyGoals'] == null) {
-      print("Failed to fetch goals met: No weeklyGoals data found");
-      return List.filled(6, 0);
-    }
-
-    List<int> weeklyGoals = List.filled(7, 0);
-    responseData['weeklyGoals'].forEach((key, value) {
-      final date = DateTime.parse(key);
-      if (date.weekday >= 1 && date.weekday <= 7) {
-        weeklyGoals[date.weekday - 1] = value;
-      }
-    });
-
-    return weeklyGoals;
-  }
-
   Future<int> getCurrentGoalMinutes() async {
     final response = await http.get(
       Uri.parse('https://cometcontacts4331.com/api/goals/active'),
@@ -268,93 +194,6 @@ class AppState {
 
     return responseData['goal']['targetMinutes'] ?? 0;
   }
-
-  Future<Map<String, dynamic>> getCurrentGoalInfo() async {
-    final response = await http.get(
-      Uri.parse('https://cometcontacts4331.com/api/goals/active'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    final Map<String, dynamic> defaultResponse = {
-      "targetMinutes": 1,
-      "completedMinutes": 0,
-    };
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      print("Failed to fetch current goal: ${response.statusCode}");
-      return defaultResponse;
-    }
-
-    final body = response.body;
-    if (body.isEmpty) {
-      print("Failed to fetch current goal: Empty response body");
-      return defaultResponse;
-    }
-
-    final responseData = jsonDecode(body);
-    if (responseData['goal'] == null) {
-      print("Failed to fetch current goal: No goal data found");
-      return defaultResponse;
-    }
-
-    return responseData['goal'] ?? defaultResponse;
-  }
-
-  Future<List<Map<String, dynamic>>> getAllGoals() async {
-    final response = await http.get(
-      Uri.parse('https://cometcontacts4331.com/api/goals/all'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    final List<Map<String, dynamic>> defaultResponse = [
-      {
-        "targetMinutes": 1,
-        "completedMinutes": 0,
-        "title": "False Goal",
-        "_id": "false_goal",
-      },
-    ];
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      print("Failed to fetch all goals: ${response.statusCode}");
-      return defaultResponse;
-    }
-
-    final body = response.body;
-    if (body.isEmpty) {
-      print("Failed to fetch goals: Empty response body");
-      return defaultResponse;
-    }
-
-    final responseData = jsonDecode(body);
-    if (responseData['goals'] == null) {
-      print("Failed to fetch goals: No goals data found");
-      return defaultResponse;
-    }
-
-    print("Fetched goals: ${responseData['goals']}");
-
-    final List<Map<String, dynamic>> allGoals = List<Map<String, dynamic>>.from(
-      responseData['goals'],
-    );
-
-    return allGoals;
-  }
-
-  Map<String, dynamic> getGoalbyId(String id) {
-    return allGoals.firstWhere(
-      (goal) => goal['_id'] == id,
-      orElse: () => {
-        "targetMinutes": 1,
-        "completedMinutes": 0,
-        "title": "False Goal",
-      },
-    );
-  }
 }
 
 /* ============================ AUTH SCREEN ============================== */
@@ -362,6 +201,7 @@ class AppState {
 class AuthScreen extends StatefulWidget {
   final AppState state;
   const AuthScreen({super.key, required this.state});
+
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
@@ -372,6 +212,15 @@ class _AuthScreenState extends State<AuthScreen> {
   String email = "";
   String password = "";
   String username = "";
+
+  @override
+  void initState() {
+    super.initState();
+    // fire the UsageStats permission dialog once the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UsageStats.grantUsagePermission();
+    });
+  }
 
   InputDecoration _fieldDec(String label, IconData icon) => InputDecoration(
     labelText: label,
@@ -438,18 +287,13 @@ class _AuthScreenState extends State<AuthScreen> {
       }
 
       widget.state.token = responseData['token'];
-
       widget.state.loggedIn = true;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => MainView(state: widget.state)),
       );
     } else {
-      // widget.state.pendingEmailCode = _generateCode();
-      // TODO: API call to send widget.state.pendingEmailCode to the user's email
-
       final registered = await tryRegister();
-
       if (registered) {
         Navigator.pushReplacement(
           context,
@@ -479,110 +323,112 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 10),
 
-                // Login/Register title
-                Text(
-                  showLogin ? 'Welcome Back!' : 'Sign Up!',
-                  style: const TextStyle(
-                    color: kAccent,
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: kFont,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Dark background container around form
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        showLogin
-                            ? const SizedBox.shrink()
-                            : Column(
-                                children: [
-                                  TextFormField(
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: kFont,
-                                    ),
-                                    cursorColor: Colors.white,
-                                    decoration: _fieldDec(
-                                      'Email',
-                                      Icons.person_pin,
-                                    ),
-                                    onSaved: (v) => email = v ?? '',
-                                  ),
-                                  const SizedBox(height: 16),
-                                ],
-                              ),
-                        TextFormField(
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontFamily: kFont,
-                          ),
-                          cursorColor: Colors.white,
-                          decoration: _fieldDec('Username', Icons.person),
-                          onSaved: (v) => username = v ?? '',
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontFamily: kFont,
-                          ),
-                          cursorColor: Colors.white,
-                          obscureText: true,
-                          decoration: _fieldDec('Password', Icons.lock),
-                          onSaved: (v) => password = v ?? '',
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: _handleSubmit,
-                          child: Text(showLogin ? 'Login' : 'Register'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => setState(() => showLogin = !showLogin),
-                  child: Text(
-                    showLogin
-                        ? "Don't have an account? Register"
-                        : "Have an account? Login",
+                  // Login/Register title
+                  Text(
+                    showLogin ? 'Welcome Back!' : 'Sign Up!',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: kAccent,
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
                       fontFamily: kFont,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 24),
 
-                const SizedBox(height: 16),
-                Image.asset(
-                  'assets/buddies/triangle/triangleRed.png',
-                  width: 100.0,
-                  height: 100.0,
-                  fit: BoxFit.contain,
-                ),
-              ],
+                  // Dark background container around form
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          showLogin
+                              ? const SizedBox.shrink()
+                              : Column(
+                                  children: [
+                                    TextFormField(
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: kFont,
+                                      ),
+                                      cursorColor: Colors.white,
+                                      decoration: _fieldDec(
+                                        'Email',
+                                        Icons.person_pin,
+                                      ),
+                                      onSaved: (v) => email = v ?? '',
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+                                ),
+                          TextFormField(
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: kFont,
+                            ),
+                            cursorColor: Colors.white,
+                            decoration: _fieldDec('Username', Icons.person),
+                            onSaved: (v) => username = v ?? '',
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: kFont,
+                            ),
+                            cursorColor: Colors.white,
+                            obscureText: true,
+                            decoration: _fieldDec('Password', Icons.lock),
+                            onSaved: (v) => password = v ?? '',
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                            onPressed: _handleSubmit,
+                            child: Text(showLogin ? 'Login' : 'Register'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => setState(() => showLogin = !showLogin),
+                    child: Text(
+                      showLogin
+                          ? "Don't have an account? Register"
+                          : "Have an account? Login",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: kFont,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                  Image.asset(
+                    'assets/buddies/triangle/triangleRed.png',
+                    width: 100.0,
+                    height: 100.0,
+                    fit: BoxFit.contain,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -674,60 +520,65 @@ class _VerifyPinScreenState extends State<VerifyPinScreen> {
         title: const Text("Email Verification"),
         automaticallyImplyLeading: false,
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const SizedBox(height: 85),
-                Text(
-                  "Enter the 6-digit code sent to\n${widget.email}",
-                  textAlign: TextAlign.center,
-                  style: bodyWhite.copyWith(fontSize: 16),
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _pinController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: kFont,
-                    letterSpacing: 4,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 85),
+                  Text(
+                    "Enter the 6-digit code sent to\n${widget.email}",
+                    textAlign: TextAlign.center,
+                    style: bodyWhite.copyWith(fontSize: 16),
                   ),
-                  maxLength: 6,
-                  keyboardType: TextInputType.number,
-                  cursorColor: Colors.white,
-                  decoration: _pinDec(),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(onPressed: _verify, child: const Text("Verify")),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _resend,
-                  child: const Text(
-                    "Resend Code",
-                    style: TextStyle(color: Colors.white, fontFamily: kFont),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _pinController,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontFamily: kFont,
+                      letterSpacing: 4,
+                    ),
+                    maxLength: 6,
+                    keyboardType: TextInputType.number,
+                    cursorColor: Colors.white,
+                    decoration: _pinDec(),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AuthScreen(state: widget.state),
-                      ),
-                      (_) => false,
-                    );
-                  },
-                  child: const Text(
-                    "Back to Login/Register",
-                    style: TextStyle(color: Colors.white, fontFamily: kFont),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: _verify,
+                    child: const Text("Verify"),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _resend,
+                    child: const Text(
+                      "Resend Code",
+                      style: TextStyle(color: Colors.white, fontFamily: kFont),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AuthScreen(state: widget.state),
+                        ),
+                        (_) => false,
+                      );
+                    },
+                    child: const Text(
+                      "Back to Login/Register",
+                      style: TextStyle(color: Colors.white, fontFamily: kFont),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -757,21 +608,80 @@ class _MainViewState extends State<MainView> {
     );
   }
 
+  Future<void> _loadUsageAndSetState() async {
+    try {
+      UsageStats.grantUsagePermission();
+
+      // Dates
+      DateTime today = new DateTime.now();
+      DateTime minusOneDays = today.subtract(Duration(days: 1));
+      DateTime minusTwoDays = today.subtract(Duration(days: 2));
+      DateTime minusThreeDays = today.subtract(Duration(days: 3));
+      DateTime minusFourDays = today.subtract(Duration(days: 4));
+      DateTime minusFiveDays = today.subtract(Duration(days: 5));
+      DateTime minusSixDays = today.subtract(Duration(days: 6));
+      DateTime minusSevenDays = today.subtract(Duration(days: 7));
+
+      // Event Blocks
+      List<EventUsageInfo> blockMinusZero = await getScreenActions(
+        minusOneDays,
+        today,
+      );
+      List<EventUsageInfo> blockMinusOne = await getScreenActions(
+        minusTwoDays,
+        minusOneDays,
+      );
+      List<EventUsageInfo> blockMinusTwo = await getScreenActions(
+        minusThreeDays,
+        minusTwoDays,
+      );
+      List<EventUsageInfo> blockMinusThree = await getScreenActions(
+        minusFourDays,
+        minusThreeDays,
+      );
+      List<EventUsageInfo> blockMinusFour = await getScreenActions(
+        minusFiveDays,
+        minusFourDays,
+      );
+      List<EventUsageInfo> blockMinusFive = await getScreenActions(
+        minusSixDays,
+        minusFiveDays,
+      );
+      List<EventUsageInfo> blockMinusSix = await UsageStats.queryEvents(
+        minusSevenDays,
+        minusSixDays,
+      );
+
+      // Minute Counts
+      int minutesMinusZero = calculateTotalScreenTimeMinutes(blockMinusZero);
+      int minutesMinusOne = calculateTotalScreenTimeMinutes(blockMinusOne);
+      int minutesMinusTwo = calculateTotalScreenTimeMinutes(blockMinusTwo);
+      int minutesMinusThree = calculateTotalScreenTimeMinutes(blockMinusThree);
+      int minutesMinusFour = calculateTotalScreenTimeMinutes(blockMinusFour);
+      int minutesMinusFive = calculateTotalScreenTimeMinutes(blockMinusFive);
+      int minutesMinusSix = calculateTotalScreenTimeMinutes(blockMinusSix);
+
+      // Setting State for Graphs
+      this.setState(() {
+        widget.state.lastWeekMinutes = [
+          minutesMinusSix,
+          minutesMinusFive,
+          minutesMinusFour,
+          minutesMinusThree,
+          minutesMinusTwo,
+          minutesMinusOne,
+          minutesMinusZero,
+        ];
+      });
+    } catch (err) {
+      print(err);
+    }
+  }
+
   // init state and call widget.state.getDailyMinutes
   @override
   void initState() {
     super.initState();
-    widget.state.getDailyMinutes().then((value) {
-      setState(() {
-        print("Daily Minutes: $value");
-        widget.state.dailyMinutes = value;
-      });
-    });
-    widget.state.getGoalsMetPerWeek().then((value) {
-      setState(() {
-        widget.state.goalsMetPerWeek = value;
-      });
-    });
 
     widget.state.getCurrentGoalMinutes().then((value) {
       setState(() {
@@ -779,18 +689,13 @@ class _MainViewState extends State<MainView> {
       });
     });
 
-    widget.state.getCurrentGoalInfo().then((value) {
+    widget.state.getCoins().then((value) {
       setState(() {
-        widget.state.currentGoalId = value['_id'];
-        widget.state.currentGoal = value;
+        widget.state.coins = value;
       });
     });
 
-    widget.state.getAllGoals().then((value) {
-      setState(() {
-        widget.state.allGoals = value;
-      });
-    });
+    _loadUsageAndSetState();
   }
 
   @override
@@ -813,71 +718,73 @@ class _MainViewState extends State<MainView> {
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
       ),
-      body: Stack(
-        children: [
-          Positioned(
-            top: 12,
-            right: 12,
-            child: IconButton(
-              icon: const Icon(Icons.store, color: kAccent),
-              tooltip: "Shop",
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ShopView(state: widget.state),
-                ),
-              ).then((_) => setState(() {})),
-            ),
-          ),
-          Center(
-            child: Transform.translate(
-              offset: const Offset(0, -110),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: kDarkSurface,
-                      borderRadius: BorderRadius.circular(20.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(24),
-                    child: CircleAvatar(
-                      radius: 70,
-                      backgroundColor: Colors.black12,
-                      backgroundImage: AssetImage(equipped.assetPath),
-                    ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned(
+              top: 12,
+              right: 12,
+              child: IconButton(
+                icon: const Icon(Icons.store, color: kAccent),
+                tooltip: "Shop",
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ShopView(state: widget.state),
                   ),
-                  const SizedBox(height: 12),
-                  Text(equipped.name, style: titleStyle),
-                ],
+                ).then((_) => setState(() {})),
               ),
             ),
-          ),
-
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: InventoryBar(
-              state: widget.state,
-              selected: selectedInventoryId,
-              onSelect: (id) => setState(() => selectedInventoryId = id),
-              onEquip: () {
-                if (selectedInventoryId != null) {
-                  setState(() => widget.state.equip(selectedInventoryId!));
-                }
-              },
+            Center(
+              child: Transform.translate(
+                offset: const Offset(0, -110),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: kDarkSurface,
+                        borderRadius: BorderRadius.circular(20.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.4),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(24),
+                      child: CircleAvatar(
+                        radius: 70,
+                        backgroundColor: Colors.black12,
+                        backgroundImage: AssetImage(equipped.assetPath),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(equipped.name, style: titleStyle),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
+
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: InventoryBar(
+                state: widget.state,
+                selected: selectedInventoryId,
+                onSelect: (id) => setState(() => selectedInventoryId = id),
+                onEquip: () {
+                  if (selectedInventoryId != null) {
+                    setState(() => widget.state.equip(selectedInventoryId!));
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1004,11 +911,27 @@ class GoalsStatsView extends StatefulWidget {
 }
 
 class _GoalsStatsViewState extends State<GoalsStatsView> {
-  int goalMinutes = 1440; // a full day with no phone
+  late int _tempGoalMinutes;
+
+  @override
+  void initState() {
+    super.initState();
+    _tempGoalMinutes = widget.state.goalMinutes;
+  }
 
   void _updateGoal() {
+    // Goal Counts
+    List<int> tempGoals = decideGoals(
+      _tempGoalMinutes,
+      widget.state.lastWeekMinutes,
+    );
+    int numTimesGoalMet = tempGoals.reduce((a, b) => a + b);
+    int newCoinTotal = widget.state.coins + numTimesGoalMet * 100;
+
     setState(() {
-      widget.state.goalMinutes = goalMinutes;
+      widget.state.goalMinutes = _tempGoalMinutes;
+      widget.state.lastWeekGoals = tempGoals;
+      widget.state.coins += newCoinTotal;
     });
     ScaffoldMessenger.of(
       context,
@@ -1042,135 +965,92 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text("Goals", style: titleStyle),
-          const SizedBox(height: 8),
-          Card(
-            color: kDarkSurface,
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // dropdown to select which goal
-                  DropdownButton<String>(
-                    value: widget.state.currentGoalId,
-                    dropdownColor: kDarkSurface,
-                    iconEnabledColor: kAccent,
-                    style: bodyWhite.copyWith(fontSize: 16),
-                    items: widget.state.allGoals.map((goal) {
-                      print("Goal: ${goal['_id']} - ${goal['title']}");
-                      return DropdownMenuItem<String>(
-                        value: goal['_id'],
-                        key: Key(goal['_id']),
-                        child: Text("${goal['title']}"),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() {
-                          widget.state.goalMinutes = widget.state.getGoalbyId(
-                            val.toString(),
-                          )['targetMinutes'];
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  Text(
-                    "Current Goal: ${_formatGoal(widget.state.goalMinutes)}",
-                    style: bodyWhite.copyWith(fontSize: 16),
-                  ),
-
-                  const SizedBox(height: 16),
-                  LinearProgressIndicator(
-                    value:
-                        widget.state.currentGoal['completedMinutes'] /
-                        widget.state.currentGoal['targetMinutes'],
-                    backgroundColor: Colors.white24,
-                    color: kAccent,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("0 m", style: bodyWhite),
-                      Text(
-                        widget.state.currentGoal['targetMinutes'] == null
-                            ? "24 h"
-                            : _formatGoal(
-                                widget.state.currentGoal['targetMinutes'],
-                              ),
-                        style: bodyWhite,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Slider(
-                    min: 0,
-                    max: 1440,
-                    value: (widget.state.goalMinutes).toDouble(),
-                    divisions: 144, // steps of 10 minutes
-                    label: _formatGoal(widget.state.goalMinutes),
-                    activeColor: kAccent,
-                    inactiveColor: Colors.white24,
-                    onChanged: (v) =>
-                        setState(() => widget.state.goalMinutes = v.toInt()),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("0 m", style: bodyWhite),
-                      Text("24 h", style: bodyWhite),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _updateGoal,
-                    child: const Text("Update Goal"),
-                  ),
-                ],
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text("Goals", style: titleStyle),
+            const SizedBox(height: 8),
+            Card(
+              color: kDarkSurface,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text("Statistics", style: titleStyle),
-          const SizedBox(height: 8),
-          Card(
-            color: kDarkSurface,
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: SizedBox(
-              height: 200,
-              child: CustomPaint(
-                painter: LineChartPainter(widget.state.dailyMinutes),
-                child: const Center(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            color: kDarkSurface,
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: SizedBox(
-              height: 200,
               child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: BarChart(data: widget.state.goalsMetPerWeek),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Text(
+                      "Current Goal: ${_formatGoal(widget.state.goalMinutes)}",
+                      style: bodyWhite.copyWith(fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Slider(
+                      min: 0,
+                      max: 1440,
+                      value: (_tempGoalMinutes).toDouble(),
+                      divisions: 144, // steps of 10 minutes
+                      label: _formatGoal(_tempGoalMinutes),
+                      activeColor: kAccent,
+                      inactiveColor: Colors.white24,
+                      onChanged: (v) =>
+                          setState(() => _tempGoalMinutes = v.toInt()),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("0 m", style: bodyWhite),
+                        Text("24 h", style: bodyWhite),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _updateGoal,
+                      child: const Text("Update Goal"),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text("Statistics", style: titleStyle),
+            const SizedBox(height: 8),
+            Card(
+              color: kDarkSurface,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: SizedBox(
+                height: 200,
+                child: CustomPaint(
+                  painter: LineChartPainter(widget.state.lastWeekMinutes),
+                  child: const Center(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              color: kDarkSurface,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: SizedBox(
+                height: 200,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: BarChart(
+                    key: ObjectKey(widget.state.lastWeekGoals),
+                    data: widget.state.lastWeekGoals,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1205,72 +1085,71 @@ class _ShopViewState extends State<ShopView> {
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: widget.state.shop.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: .9,
-        ),
-        itemBuilder: (_, i) {
-          final item = widget.state.shop[i];
-          return Card(
-            color: kDarkSurface,
-            elevation: 6,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () {
-                final ok = widget.state.buy(item);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      ok ? "Purchased ${item.name}!" : "Not enough coins.",
+      body: SafeArea(
+        child: GridView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: widget.state.shop.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: .9,
+          ),
+          itemBuilder: (_, i) {
+            final item = widget.state.shop[i];
+            return Card(
+              color: kDarkSurface,
+              elevation: 6,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  final ok = widget.state.buy(item);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ok ? "Purchased ${item.name}!" : "Not enough coins.",
+                      ),
                     ),
+                  );
+                  setState(() {});
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: 110,
+                        child: Image.asset(item.assetPath, fit: BoxFit.contain),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        item.name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          fontFamily: kFont,
+                        ),
+                      ),
+                      const SizedBox(height: 4), // smaller spacing under name
+                      Text(
+                        "${item.price} coins",
+                        style: bodyWhite,
+                        textAlign: TextAlign.center,
+                      ),
+                      const Spacer(), // pushes everything slightly up
+                    ],
                   ),
-                );
-                setState(() {});
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: 110,
-                      child: Image.asset(
-                        item.assetPath,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      item.name,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        fontFamily: kFont,
-                      ),
-                    ),
-                    const SizedBox(height: 4), // smaller spacing under name
-                    Text(
-                      "${item.price} coins",
-                      style: bodyWhite,
-                      textAlign: TextAlign.center,
-                    ),
-                    const Spacer(), // pushes everything slightly up
-                  ],
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -1280,7 +1159,15 @@ class _ShopViewState extends State<ShopView> {
 
 class LineChartPainter extends CustomPainter {
   final List<int> data;
-  final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  final List<String> days = [
+    '-6 Days',
+    '-5 Days',
+    '-4 Days',
+    '-3 Days',
+    '-2 Days',
+    '-1 Days',
+    'Today',
+  ];
 
   // 5 hours and 16 minutes is the average for all Americans (316 mins)
   final List<int> averageDailyMinutes = List.generate(7, (_) => 316);
@@ -1520,7 +1407,15 @@ class BarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final maxVal = data.isEmpty ? 1 : data.reduce(max);
     const barHeight = 100.0;
-    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final List<String> days = [
+      '-6 Days',
+      '-5 Days',
+      '-4 Days',
+      '-3 Days',
+      '-2 Days',
+      '-1 Days',
+      'Today',
+    ];
     print("Bar Chart Data: ${jsonEncode(data)}");
 
     return SizedBox(
