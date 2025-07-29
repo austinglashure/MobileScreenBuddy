@@ -661,25 +661,6 @@ class _MainViewState extends State<MainView> {
       int minutesMinusFive = calculateTotalScreenTimeMinutes(blockMinusFive);
       int minutesMinusSix = calculateTotalScreenTimeMinutes(blockMinusSix);
 
-      // Goal Counts
-      int goalSix = decideGoal(widget.state.goalMinutes, minutesMinusSix);
-      int goalFive = decideGoal(widget.state.goalMinutes, minutesMinusFive);
-      int goalFour = decideGoal(widget.state.goalMinutes, minutesMinusFour);
-      int goalThree = decideGoal(widget.state.goalMinutes, minutesMinusThree);
-      int goalTwo = decideGoal(widget.state.goalMinutes, minutesMinusTwo);
-      int goalOne = decideGoal(widget.state.goalMinutes, minutesMinusOne);
-      int goalZero = decideGoal(widget.state.goalMinutes, minutesMinusTwo);
-
-      // Coins Assessed
-      int coinsEarned =
-          goalSix +
-          goalFive +
-          goalFour +
-          goalThree +
-          goalTwo +
-          goalOne +
-          goalZero;
-
       // Setting State for Graphs
       this.setState(() {
         widget.state.lastWeekMinutes = [
@@ -691,16 +672,6 @@ class _MainViewState extends State<MainView> {
           minutesMinusOne,
           minutesMinusZero,
         ];
-        widget.state.lastWeekGoals = [
-          goalSix,
-          goalFive,
-          goalFour,
-          goalThree,
-          goalTwo,
-          goalOne,
-          goalZero,
-        ];
-        widget.state.coins += coinsEarned * 100;
       });
     } catch (err) {
       print(err);
@@ -949,8 +920,18 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
   }
 
   void _updateGoal() {
+    // Goal Counts
+    List<int> tempGoals = decideGoals(
+      widget.state.goalMinutes,
+      widget.state.lastWeekMinutes,
+    );
+
+    int numTimesGoalMet = tempGoals.reduce((a, b) => a + b);
+
     setState(() {
       widget.state.goalMinutes = _tempGoalMinutes;
+      widget.state.lastWeekMinutes = tempGoals;
+      widget.state.coins += numTimesGoalMet * 100;
     });
     ScaffoldMessenger.of(
       context,

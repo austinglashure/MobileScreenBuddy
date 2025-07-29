@@ -39,11 +39,10 @@ int calculateTotalScreenTimeMinutes(List<EventUsageInfo> events) {
   return totalOn.inMinutes;
 }
 
-int decideGoal(int goalMinutes, int screenMinutes) {
-  int remainder = goalMinutes % screenMinutes;
-  if (remainder == goalMinutes) {
-    return 0;
-  } else {
-    return 1;
+List<int> decideGoals(int goalMinutes, List<int> screenMinutes) {
+  final result = <int>[];
+  for (var minutes in screenMinutes) {
+    result.add(goalMinutes > minutes ? 1 : 0);
   }
+  return result;
 }
