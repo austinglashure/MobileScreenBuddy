@@ -1,5 +1,10 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+// import 'package:shared_preferences/shared_preferences.dart';
+
+import 'shop.dart';
 
 void main() => runApp(MyApp());
 
@@ -86,51 +91,38 @@ class MyApp extends StatelessWidget {
 
 class AppState {
   bool loggedIn = false;
-  int coins = 150;
+  int coins = 1500;
   String? pendingEmailCode;
+  int goalMinutes = 0;
+
+  List<Map<String, dynamic>> allGoals = [];
+  Map<String, dynamic> currentGoal = {
+    "targetMinutes": 1,
+    "completedMinutes": 0,
+    "title": "False Goal",
+  };
+  String currentGoalId = "";
+  Map<String, dynamic> user = {};
+
+  String? token;
 
   final List<AvatarItem> owned = [
     AvatarItem(
       assetPath: 'assets/buddies/triangle/triangleRed.png',
-      name: "Buddy",
+      name: "Red Triangle",
       id: 0,
     ),
   ];
-
-  final List<AvatarItem> shop = [
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleGreen.png',
-      name: "Green Buddy",
-      id: 1,
-      price: 50,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleBlue.png',
-      name: "Blue Buddy",
-      id: 2,
-      price: 75,
-    ),
-    AvatarItem(
-      assetPath: 'assets/buddies/triangle/triangleOrange.png',
-      name: "Orange Buddy",
-      id: 3,
-      price: 100,
-    ),
-  ];
+  final List<AvatarItem> shop = shopList;
 
   int equippedId = 0;
 
-  TimeOfDay start = const TimeOfDay(hour: 12, minute: 0);
-  TimeOfDay end = const TimeOfDay(hour: 12, minute: 0);
-
-  final List<int> dailyMinutes = List.generate(
-    7,
-    (_) => 90 + Random().nextInt(120),
-  );
-  final List<int> goalsMetPerWeek = List.generate(
-    6,
-    (_) => Random().nextInt(7),
-  );
+  // final List<int> dailyMinutes = List.generate(
+  //   7,
+  //   (_) => 90 + Random().nextInt(120),
+  // );
+  List<int> dailyMinutes = List.filled(7, 0);
+  List<int> goalsMetPerWeek = List.filled(7, 0);
 
   void equip(int id) => equippedId = id;
   AvatarItem byId(int id) => owned.firstWhere((e) => e.id == id);
@@ -143,19 +135,226 @@ class AppState {
     }
     return false;
   }
-}
 
-class AvatarItem {
-  final String assetPath;
-  final String name;
-  final int id;
-  final int price;
-  AvatarItem({
-    required this.assetPath,
-    required this.name,
-    required this.id,
-    this.price = 0,
-  });
+  Future<int> getCoins() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/user'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Login failed by status code: ${response.statusCode}");
+      return 0;
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Login failed: Empty response body");
+      return 0;
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['user'] == null) {
+      print("Login failed: No user data found");
+      return 0;
+    }
+
+    // coins = responseData['user']['coins'] ?? 0;
+    return responseData['user']['coins'] ?? 0;
+  }
+
+  Future<List<int>> getDailyMinutes() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/metrics/screentime'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Failed to fetch daily minutes: ${response.statusCode}");
+      return List.filled(7, 0);
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Failed to fetch daily minutes: Empty response body");
+      return List.filled(7, 0);
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['screentime'] == null) {
+      print("Failed to fetch daily minutes: No screentime data found");
+      return List.filled(7, 0);
+    }
+
+    List<int> dailyMinutes = List.filled(7, 0);
+    responseData['screentime'].forEach((key, value) {
+      final date = DateTime.parse(key);
+      if (date.weekday >= 1 && date.weekday <= 7) {
+        dailyMinutes[date.weekday - 1] = value.toInt();
+      }
+    });
+
+    return dailyMinutes;
+  }
+
+  Future<List<int>> getGoalsMetPerWeek() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/metrics/weeklygoals'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Failed to fetch goals met: ${response.statusCode}");
+      return List.filled(6, 0);
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Failed to fetch goals met: Empty response body");
+      return List.filled(6, 0);
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['weeklyGoals'] == null) {
+      print("Failed to fetch goals met: No weeklyGoals data found");
+      return List.filled(6, 0);
+    }
+
+    List<int> weeklyGoals = List.filled(7, 0);
+    responseData['weeklyGoals'].forEach((key, value) {
+      final date = DateTime.parse(key);
+      if (date.weekday >= 1 && date.weekday <= 7) {
+        weeklyGoals[date.weekday - 1] = value;
+      }
+    });
+
+    return weeklyGoals;
+  }
+
+  Future<int> getCurrentGoalMinutes() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/goals/active'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Failed to fetch current goal minutes: ${response.statusCode}");
+      return 0;
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Failed to fetch current goal minutes: Empty response body");
+      return 0;
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['goal'] == null) {
+      print("Failed to fetch current goal minutes: No goal data found");
+      return 0;
+    }
+
+    return responseData['goal']['targetMinutes'] ?? 0;
+  }
+
+  Future<Map<String, dynamic>> getCurrentGoalInfo() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/goals/active'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    final Map<String, dynamic> defaultResponse = {
+      "targetMinutes": 1,
+      "completedMinutes": 0,
+    };
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Failed to fetch current goal: ${response.statusCode}");
+      return defaultResponse;
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Failed to fetch current goal: Empty response body");
+      return defaultResponse;
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['goal'] == null) {
+      print("Failed to fetch current goal: No goal data found");
+      return defaultResponse;
+    }
+
+    return responseData['goal'] ?? defaultResponse;
+  }
+
+  Future<List<Map<String, dynamic>>> getAllGoals() async {
+    final response = await http.get(
+      Uri.parse('https://cometcontacts4331.com/api/goals/all'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    final List<Map<String, dynamic>> defaultResponse = [
+      {
+        "targetMinutes": 1,
+        "completedMinutes": 0,
+        "title": "False Goal",
+        "_id": "false_goal",
+      },
+    ];
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Failed to fetch all goals: ${response.statusCode}");
+      return defaultResponse;
+    }
+
+    final body = response.body;
+    if (body.isEmpty) {
+      print("Failed to fetch goals: Empty response body");
+      return defaultResponse;
+    }
+
+    final responseData = jsonDecode(body);
+    if (responseData['goals'] == null) {
+      print("Failed to fetch goals: No goals data found");
+      return defaultResponse;
+    }
+
+    print("Fetched goals: ${responseData['goals']}");
+
+    final List<Map<String, dynamic>> allGoals = List<Map<String, dynamic>>.from(
+      responseData['goals'],
+    );
+
+    return allGoals;
+  }
+
+  Map<String, dynamic> getGoalbyId(String id) {
+    return allGoals.firstWhere(
+      (goal) => goal['_id'] == id,
+      orElse: () => {
+        "targetMinutes": 1,
+        "completedMinutes": 0,
+        "title": "False Goal",
+      },
+    );
+  }
 }
 
 /* ============================ AUTH SCREEN ============================== */
@@ -172,6 +371,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   String email = "";
   String password = "";
+  String username = "";
 
   InputDecoration _fieldDec(String label, IconData icon) => InputDecoration(
     labelText: label,
@@ -185,23 +385,79 @@ class _AuthScreenState extends State<AuthScreen> {
     ),
   );
 
-  void _handleSubmit() {
+  Future<bool> tryRegister() async {
+    final response = await http.post(
+      Uri.parse('https://cometcontacts4331.com/api/register'),
+      body: jsonEncode({
+        'email': email,
+        'username': username,
+        'password': password,
+      }),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Registration failed by status code: ${response.statusCode}");
+      return false;
+    }
+
+    final result = jsonDecode(response.body);
+    if (result['user'] == null) {
+      print("Registration failed: No user data found");
+      return false;
+    }
+
+    widget.state.user = result['user'];
+    return true;
+  }
+
+  Future<void> _handleSubmit() async {
     _formKey.currentState?.save();
     if (showLogin) {
+      final response = await http.post(
+        Uri.parse('https://cometcontacts4331.com/api/login'),
+        body: jsonEncode({'username': username, 'password': password}),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print("Login failed by status code: ${response.statusCode}");
+        return;
+      }
+
+      final body = response.body;
+      if (body.isEmpty) {
+        print("Login failed: Empty response body");
+        return;
+      }
+
+      final responseData = jsonDecode(body);
+      if (responseData['user'] == null) {
+        print("Login failed: No user data found");
+        return;
+      }
+
+      widget.state.token = responseData['token'];
+
       widget.state.loggedIn = true;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => MainView(state: widget.state)),
       );
     } else {
-      widget.state.pendingEmailCode = _generateCode();
+      // widget.state.pendingEmailCode = _generateCode();
       // TODO: API call to send widget.state.pendingEmailCode to the user's email
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VerifyPinScreen(state: widget.state, email: email),
-        ),
-      );
+
+      final registered = await tryRegister();
+
+      if (registered) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VerifyPinScreen(state: widget.state, email: email),
+          ),
+        );
+      }
     }
   }
 
@@ -256,14 +512,33 @@ class _AuthScreenState extends State<AuthScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
+                        showLogin
+                            ? const SizedBox.shrink()
+                            : Column(
+                                children: [
+                                  TextFormField(
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: kFont,
+                                    ),
+                                    cursorColor: Colors.white,
+                                    decoration: _fieldDec(
+                                      'Email',
+                                      Icons.person_pin,
+                                    ),
+                                    onSaved: (v) => email = v ?? '',
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
                         TextFormField(
                           style: const TextStyle(
                             color: Colors.white,
                             fontFamily: kFont,
                           ),
                           cursorColor: Colors.white,
-                          decoration: _fieldDec('Email', Icons.person),
-                          onSaved: (v) => email = v ?? '',
+                          decoration: _fieldDec('Username', Icons.person),
+                          onSaved: (v) => username = v ?? '',
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -342,13 +617,35 @@ class _VerifyPinScreenState extends State<VerifyPinScreen> {
     ),
   );
 
-  void _verify() {
-    if (_pinController.text == widget.state.pendingEmailCode) {
+  Future<bool> tryVerifyEmail(String code) async {
+    final response = await http.post(
+      Uri.parse('https://cometcontacts4331.com/api/verify-email'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': widget.email, 'code': code}),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Email verification failed by status code: ${response.statusCode}");
+      return false;
+    }
+
+    final result = jsonDecode(response.body);
+    if (result['message'] != 'Email has been verified.') {
+      print("Email verification failed: ${result['message']}");
+      return false;
+    }
+
+    return true;
+  }
+
+  void _verify() async {
+    final verifyResult = await tryVerifyEmail(_pinController.text);
+    if (verifyResult) {
       widget.state.loggedIn = true;
       widget.state.pendingEmailCode = null;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => MainView(state: widget.state)),
+        MaterialPageRoute(builder: (_) => AuthScreen(state: widget.state)),
       );
     } else {
       ScaffoldMessenger.of(
@@ -460,6 +757,42 @@ class _MainViewState extends State<MainView> {
     );
   }
 
+  // init state and call widget.state.getDailyMinutes
+  @override
+  void initState() {
+    super.initState();
+    widget.state.getDailyMinutes().then((value) {
+      setState(() {
+        print("Daily Minutes: $value");
+        widget.state.dailyMinutes = value;
+      });
+    });
+    widget.state.getGoalsMetPerWeek().then((value) {
+      setState(() {
+        widget.state.goalsMetPerWeek = value;
+      });
+    });
+
+    widget.state.getCurrentGoalMinutes().then((value) {
+      setState(() {
+        widget.state.goalMinutes = value;
+      });
+    });
+
+    widget.state.getCurrentGoalInfo().then((value) {
+      setState(() {
+        widget.state.currentGoalId = value['_id'];
+        widget.state.currentGoal = value;
+      });
+    });
+
+    widget.state.getAllGoals().then((value) {
+      setState(() {
+        widget.state.allGoals = value;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final equipped = widget.state.byId(widget.state.equippedId);
@@ -568,82 +901,94 @@ class InventoryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: 10,
-      color: kDarkSurface,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Inventory", style: titleStyle.copyWith(fontSize: 18)),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 80,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: state.owned.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (_, i) {
-                  final item = state.owned[i];
-                  final equipped = state.equippedId == item.id;
-                  final isSelected = selected == item.id;
-                  return GestureDetector(
-                    onTap: () => onSelect(item.id),
-                    child: Stack(
-                      children: [
-                        Container(
-                          width: 70,
-                          decoration: BoxDecoration(
-                            color: kScaffold,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected ? kAccent : Colors.white24,
-                              width: isSelected ? 3 : 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: Image.asset(
-                              item.assetPath,
-                              width: 36,
-                              height: 36,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                        if (equipped)
-                          const Positioned(
-                            right: 2,
-                            top: 2,
-                            child: Icon(
-                              Icons.check_circle,
-                              size: 18,
-                              color: kAccent,
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
+    return FutureBuilder(
+      future: state.getCoins(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          state.coins = snapshot.data!;
+        } else if (snapshot.hasError) {
+          print("Error fetching coins: ${snapshot.error}");
+          state.coins = 0; // Fallback if error occurs
+        }
+
+        return Material(
+          elevation: 10,
+          color: kDarkSurface,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onEquip,
-                    child: const Text('Equip'),
+                Text("Inventory", style: titleStyle.copyWith(fontSize: 18)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 80,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: state.owned.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (_, i) {
+                      final item = state.owned[i];
+                      final equipped = state.equippedId == item.id;
+                      final isSelected = selected == item.id;
+                      return GestureDetector(
+                        onTap: () => onSelect(item.id),
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: 70,
+                              decoration: BoxDecoration(
+                                color: kScaffold,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected ? kAccent : Colors.white24,
+                                  width: isSelected ? 3 : 1,
+                                ),
+                              ),
+                              child: Center(
+                                child: Image.asset(
+                                  item.assetPath,
+                                  width: 36,
+                                  height: 36,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                            if (equipped)
+                              const Positioned(
+                                right: 2,
+                                top: 2,
+                                child: Icon(
+                                  Icons.check_circle,
+                                  size: 18,
+                                  color: kAccent,
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text("Coins: ${state.coins}", style: bodyWhite),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: onEquip,
+                        child: const Text('Equip'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text("Coins: ${state.coins}", style: bodyWhite),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -653,35 +998,17 @@ class InventoryBar extends StatelessWidget {
 class GoalsStatsView extends StatefulWidget {
   final AppState state;
   const GoalsStatsView({super.key, required this.state});
-  
+
   @override
   State<GoalsStatsView> createState() => _GoalsStatsViewState();
 }
 
 class _GoalsStatsViewState extends State<GoalsStatsView> {
-  TimeOfDay? newStart;
-  TimeOfDay? newEnd;
-
-  Future<void> _pickStart() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: widget.state.start,
-    );
-    if (picked != null) setState(() => newStart = picked);
-  }
-
-  Future<void> _pickEnd() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: widget.state.end,
-    );
-    if (picked != null) setState(() => newEnd = picked);
-  }
+  int goalMinutes = 1440; // a full day with no phone
 
   void _updateGoal() {
     setState(() {
-      widget.state.start = newStart ?? widget.state.start;
-      widget.state.end = newEnd ?? widget.state.end;
+      widget.state.goalMinutes = goalMinutes;
     });
     ScaffoldMessenger.of(
       context,
@@ -697,8 +1024,13 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
     );
   }
 
-  String _fmt(TimeOfDay t) =>
-      "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
+  String _formatGoal(int minutes) {
+    final h = minutes ~/ 60;
+    print("hours: $h");
+    final m = minutes % 60;
+    print("minutes: $m");
+    return "${h}h ${m.toString().padLeft(2, '0')}m";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -725,46 +1057,76 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  // dropdown to select which goal
+                  DropdownButton<String>(
+                    value: widget.state.currentGoalId,
+                    dropdownColor: kDarkSurface,
+                    iconEnabledColor: kAccent,
+                    style: bodyWhite.copyWith(fontSize: 16),
+                    items: widget.state.allGoals.map((goal) {
+                      print("Goal: ${goal['_id']} - ${goal['title']}");
+                      return DropdownMenuItem<String>(
+                        value: goal['_id'],
+                        key: Key(goal['_id']),
+                        child: Text("${goal['title']}"),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          widget.state.goalMinutes = widget.state.getGoalbyId(
+                            val.toString(),
+                          )['targetMinutes'];
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
                   Text(
-                    "Current Goal: ${_fmt(widget.state.start)} - ${_fmt(widget.state.end)}",
+                    "Current Goal: ${_formatGoal(widget.state.goalMinutes)}",
                     style: bodyWhite.copyWith(fontSize: 16),
                   ),
+
                   const SizedBox(height: 16),
+                  LinearProgressIndicator(
+                    value:
+                        widget.state.currentGoal['completedMinutes'] /
+                        widget.state.currentGoal['targetMinutes'],
+                    backgroundColor: Colors.white24,
+                    color: kAccent,
+                  ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            side: const BorderSide(color: Colors.white),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: _pickStart,
-                          child: Text(
-                            "Start: ${_fmt(newStart ?? widget.state.start)}",
-                            style: bodyWhite,
-                          ),
-                        ),
+                      Text("0 m", style: bodyWhite),
+                      Text(
+                        widget.state.currentGoal['targetMinutes'] == null
+                            ? "24 h"
+                            : _formatGoal(
+                                widget.state.currentGoal['targetMinutes'],
+                              ),
+                        style: bodyWhite,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            side: const BorderSide(color: Colors.white),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: _pickEnd,
-                          child: Text(
-                            "End: ${_fmt(newEnd ?? widget.state.end)}",
-                            style: bodyWhite,
-                          ),
-                        ),
-                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Slider(
+                    min: 0,
+                    max: 1440,
+                    value: (widget.state.goalMinutes).toDouble(),
+                    divisions: 144, // steps of 10 minutes
+                    label: _formatGoal(widget.state.goalMinutes),
+                    activeColor: kAccent,
+                    inactiveColor: Colors.white24,
+                    onChanged: (v) =>
+                        setState(() => widget.state.goalMinutes = v.toInt()),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("0 m", style: bodyWhite),
+                      Text("24 h", style: bodyWhite),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -789,9 +1151,7 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
               height: 200,
               child: CustomPaint(
                 painter: LineChartPainter(widget.state.dailyMinutes),
-                child: const Center(
-
-                ),
+                child: const Center(),
               ),
             ),
           ),
@@ -981,7 +1341,11 @@ class LineChartPainter extends CustomPainter {
     // Y labels
     for (double yVal = 0; yVal <= maxVal; yVal += dyStep) {
       final y = size.height - padding - (yVal / maxVal) * chartHeight;
-      canvas.drawLine(Offset(padding - 4, y), Offset(size.width - padding, y), axisPaint);
+      canvas.drawLine(
+        Offset(padding - 4, y),
+        Offset(size.width - padding, y),
+        axisPaint,
+      );
 
       final tp = TextPainter(
         text: TextSpan(text: yVal.toInt().toString(), style: labelStyle),
@@ -1001,12 +1365,19 @@ class LineChartPainter extends CustomPainter {
     }
 
     // X and Y lines
-    canvas.drawLine(Offset(padding, padding), Offset(padding, size.height - padding), axisPaint);
-    canvas.drawLine(Offset(padding, size.height - padding), Offset(size.width - padding, size.height - padding), axisPaint);
-
+    canvas.drawLine(
+      Offset(padding, padding),
+      Offset(padding, size.height - padding),
+      axisPaint,
+    );
+    canvas.drawLine(
+      Offset(padding, size.height - padding),
+      Offset(size.width - padding, size.height - padding),
+      axisPaint,
+    );
 
     // Title
-    
+
     final titleTp = TextPainter(
       text: TextSpan(
         text: 'User Screen Time (mins)',
@@ -1015,13 +1386,15 @@ class LineChartPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    titleTp.paint(canvas, Offset(
-      (size.width - titleTp.width) / 2,
-      padding / 2 - titleTp.height / 2,
-    ));
+    titleTp.paint(
+      canvas,
+      Offset(
+        (size.width - titleTp.width) / 2,
+        padding / 2 - titleTp.height / 2,
+      ),
+    );
 
     /*-----------------------Drawing the Default Lines---------------------*/
-
 
     final averageMinutesPath = Path();
     for (int i = 0; i < averageDailyMinutes.length; i++) {
@@ -1040,7 +1413,10 @@ class LineChartPainter extends CustomPainter {
     // Middle of average line
     final avgMidIndex = (averageDailyMinutes.length / 2).floor();
     final avgMidX = padding + avgMidIndex * dx;
-    final avgMidY = size.height - padding - (averageDailyMinutes[avgMidIndex] / maxVal) * chartHeight;
+    final avgMidY =
+        size.height -
+        padding -
+        (averageDailyMinutes[avgMidIndex] / maxVal) * chartHeight;
 
     final avgLabel = TextPainter(
       text: const TextSpan(
@@ -1051,12 +1427,6 @@ class LineChartPainter extends CustomPainter {
     )..layout();
 
     avgLabel.paint(canvas, Offset(avgMidX - avgLabel.width / 2, avgMidY - 14));
-
-    
-
-
-
-
 
     final healthyMinutesPath = Path();
     for (int i = 0; i < healthyDailyMinutes.length; i++) {
@@ -1071,11 +1441,14 @@ class LineChartPainter extends CustomPainter {
         healthyMinutesPath.lineTo(x, y);
       }
     }
-    
+
     // Middle of healthy line
     final healthyMidIndex = (healthyDailyMinutes.length / 2).floor();
     final healthyMidX = padding + healthyMidIndex * dx;
-    final healthyMidY = size.height - padding - (healthyDailyMinutes[healthyMidIndex] / maxVal) * chartHeight;
+    final healthyMidY =
+        size.height -
+        padding -
+        (healthyDailyMinutes[healthyMidIndex] / maxVal) * chartHeight;
 
     final healthyLabel = TextPainter(
       text: const TextSpan(
@@ -1085,14 +1458,15 @@ class LineChartPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    healthyLabel.paint(canvas, Offset(healthyMidX - healthyLabel.width / 2, healthyMidY - 14));
-
-
-
+    healthyLabel.paint(
+      canvas,
+      Offset(healthyMidX - healthyLabel.width / 2, healthyMidY - 14),
+    );
 
     canvas.drawPath(averageMinutesPath, averageMinutesColor);
     canvas.drawPath(healthyMinutesPath, healthyMinutesColor);
 
+    print("Line Chart Data: ${jsonEncode(data)}");
     if (data.isEmpty) return;
 
     /*------------------Drawing User Data Line-----------------------------*/
@@ -1115,13 +1489,16 @@ class LineChartPainter extends CustomPainter {
     final userLabel = TextPainter(
       text: const TextSpan(
         text: "You",
-        style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: Colors.white70,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
 
     userLabel.paint(canvas, Offset(userX + 4, userY - 6));
-
   }
 
   @override
@@ -1138,6 +1515,7 @@ class BarChart extends StatelessWidget {
     final maxVal = data.isEmpty ? 1 : data.reduce(max);
     const barHeight = 100.0;
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    print("Bar Chart Data: ${jsonEncode(data)}");
 
     return SizedBox(
       height: barHeight + 30, // extra room to prevent overflow
@@ -1156,6 +1534,7 @@ class BarChart extends StatelessWidget {
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
+
               children: List.generate(data.length, (i) {
                 final height = maxVal == 0 ? 0 : (data[i] / maxVal) * barHeight;
                 return Expanded(
@@ -1198,10 +1577,7 @@ class BarChart extends StatelessWidget {
                 child: Center(
                   child: Text(
                     days[i],
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 10,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ),
               );
