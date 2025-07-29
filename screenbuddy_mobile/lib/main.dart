@@ -1162,7 +1162,15 @@ class _ShopViewState extends State<ShopView> {
 
 class LineChartPainter extends CustomPainter {
   final List<int> data;
-  final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  final List<String> days = [
+    '-6 Days',
+    '-5 Days',
+    '-4 Days',
+    '-3 Days',
+    '-2 Days',
+    'Yesterday',
+    'Today',
+  ];
 
   // 5 hours and 16 minutes is the average for all Americans (316 mins)
   final List<int> averageDailyMinutes = List.generate(7, (_) => 316);
