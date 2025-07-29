@@ -931,11 +931,17 @@ class GoalsStatsView extends StatefulWidget {
 }
 
 class _GoalsStatsViewState extends State<GoalsStatsView> {
-  int goalMinutes = 1440; // a full day with no phone
+  late int _tempGoalMinutes;
+
+  @override
+  void initState() {
+    super.initState();
+    _tempGoalMinutes = widget.state.goalMinutes;
+  }
 
   void _updateGoal() {
     setState(() {
-      widget.state.goalMinutes = goalMinutes;
+      widget.state.goalMinutes = _tempGoalMinutes;
     });
     ScaffoldMessenger.of(
       context,
@@ -999,7 +1005,7 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
                     activeColor: kAccent,
                     inactiveColor: Colors.white24,
                     onChanged: (v) =>
-                        setState(() => widget.state.goalMinutes = v.toInt()),
+                        setState(() => _tempGoalMinutes = v.toInt()),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
