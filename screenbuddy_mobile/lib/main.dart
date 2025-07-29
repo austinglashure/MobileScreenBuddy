@@ -1181,7 +1181,7 @@ class LineChartPainter extends CustomPainter {
     '-4 Days',
     '-3 Days',
     '-2 Days',
-    'Yesterday',
+    '-1 Days',
     'Today',
   ];
 
@@ -1429,7 +1429,7 @@ class BarChart extends StatelessWidget {
       '-4 Days',
       '-3 Days',
       '-2 Days',
-      'Yesterday',
+      '-1 Days',
       'Today',
     ];
     print("Bar Chart Data: ${jsonEncode(data)}");
