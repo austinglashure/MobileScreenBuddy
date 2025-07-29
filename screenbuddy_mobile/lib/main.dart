@@ -119,8 +119,13 @@ class AppState {
 
   int equippedId = 0;
 
+  // probably gonna depricate
   List<int> dailyMinutes = List.filled(7, 0);
   List<int> goalsMetPerWeek = List.filled(7, 0);
+
+  // new
+  List<int> lastWeekMinutes = List.filled(7, 0);
+  List<int> lastWeekGoals = List.filled(7, 0);
 
   void equip(int id) => equippedId = id;
   AvatarItem byId(int id) => owned.firstWhere((e) => e.id == id);
@@ -360,6 +365,7 @@ class AppState {
 class AuthScreen extends StatefulWidget {
   final AppState state;
   const AuthScreen({super.key, required this.state});
+
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
@@ -370,6 +376,15 @@ class _AuthScreenState extends State<AuthScreen> {
   String email = "";
   String password = "";
   String username = "";
+
+  @override
+  void initState() {
+    super.initState();
+    // fire the UsageStats permission dialog once the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UsageStats.grantUsagePermission();
+    });
+  }
 
   InputDecoration _fieldDec(String label, IconData icon) => InputDecoration(
     labelText: label,
@@ -436,18 +451,13 @@ class _AuthScreenState extends State<AuthScreen> {
       }
 
       widget.state.token = responseData['token'];
-
       widget.state.loggedIn = true;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => MainView(state: widget.state)),
       );
     } else {
-      // widget.state.pendingEmailCode = _generateCode();
-      // TODO: API call to send widget.state.pendingEmailCode to the user's email
-
       final registered = await tryRegister();
-
       if (registered) {
         Navigator.pushReplacement(
           context,
@@ -759,8 +769,95 @@ class _MainViewState extends State<MainView> {
     try {
       UsageStats.grantUsagePermission();
 
+      // Dates
+      DateTime today = new DateTime.now();
+      DateTime minusOneDays = today.subtract(Duration(days: 1));
+      DateTime minusTwoDays = today.subtract(Duration(days: 2));
+      DateTime minusThreeDays = today.subtract(Duration(days: 3));
+      DateTime minusFourDays = today.subtract(Duration(days: 4));
+      DateTime minusFiveDays = today.subtract(Duration(days: 5));
+      DateTime minusSixDays = today.subtract(Duration(days: 6));
+      DateTime minusSevenDays = today.subtract(Duration(days: 7));
+
+      // Event Blocks
+      List<EventUsageInfo> blockMinusZero = await getScreenActions(
+        minusOneDays,
+        today,
+      );
+      List<EventUsageInfo> blockMinusOne = await getScreenActions(
+        minusTwoDays,
+        minusOneDays,
+      );
+      List<EventUsageInfo> blockMinusTwo = await getScreenActions(
+        minusThreeDays,
+        minusTwoDays,
+      );
+      List<EventUsageInfo> blockMinusThree = await getScreenActions(
+        minusFourDays,
+        minusThreeDays,
+      );
+      List<EventUsageInfo> blockMinusFour = await getScreenActions(
+        minusFiveDays,
+        minusFourDays,
+      );
+      List<EventUsageInfo> blockMinusFive = await getScreenActions(
+        minusSixDays,
+        minusFiveDays,
+      );
+      List<EventUsageInfo> blockMinusSix = await UsageStats.queryEvents(
+        minusSevenDays,
+        minusSixDays,
+      );
+
+      // Minute Counts
+      int minutesMinusZero = calculateTotalScreenTimeMinutes(blockMinusZero);
+      int minutesMinusOne = calculateTotalScreenTimeMinutes(blockMinusOne);
+      int minutesMinusTwo = calculateTotalScreenTimeMinutes(blockMinusTwo);
+      int minutesMinusThree = calculateTotalScreenTimeMinutes(blockMinusThree);
+      int minutesMinusFour = calculateTotalScreenTimeMinutes(blockMinusFour);
+      int minutesMinusFive = calculateTotalScreenTimeMinutes(blockMinusFive);
+      int minutesMinusSix = calculateTotalScreenTimeMinutes(blockMinusSix);
+
+      // Goal Counts
+      int goalSix = decideGoal(widget.state.goalMinutes, minutesMinusSix);
+      int goalFive = decideGoal(widget.state.goalMinutes, minutesMinusFive);
+      int goalFour = decideGoal(widget.state.goalMinutes, minutesMinusFour);
+      int goalThree = decideGoal(widget.state.goalMinutes, minutesMinusThree);
+      int goalTwo = decideGoal(widget.state.goalMinutes, minutesMinusTwo);
+      int goalOne = decideGoal(widget.state.goalMinutes, minutesMinusOne);
+      int goalZero = decideGoal(widget.state.goalMinutes, minutesMinusTwo);
+
+      // Coins Assessed
+      int coinsEarned =
+          goalSix +
+          goalFive +
+          goalFour +
+          goalThree +
+          goalTwo +
+          goalOne +
+          goalZero;
+
+      // Setting State for Graphs
       this.setState(() {
-        widget.state.dailyMinutes = [100, 200, 300, 400, 500, 600, 700];
+        widget.state.lastWeekMinutes = [
+          minutesMinusSix,
+          minutesMinusFive,
+          minutesMinusFour,
+          minutesMinusThree,
+          minutesMinusTwo,
+          minutesMinusOne,
+          minutesMinusZero,
+        ];
+        widget.state.lastWeekGoals = [
+          goalSix,
+          goalFive,
+          goalFour,
+          goalThree,
+          goalTwo,
+          goalOne,
+          goalZero,
+        ];
+        widget.state.coins += coinsEarned * 100;
       });
     } catch (err) {
       print(err);
@@ -1162,7 +1259,7 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
             child: SizedBox(
               height: 200,
               child: CustomPaint(
-                painter: LineChartPainter(widget.state.dailyMinutes),
+                painter: LineChartPainter(widget.state.lastWeekMinutes),
                 child: const Center(),
               ),
             ),
@@ -1178,7 +1275,7 @@ class _GoalsStatsViewState extends State<GoalsStatsView> {
               height: 200,
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: BarChart(data: widget.state.goalsMetPerWeek),
+                child: BarChart(data: widget.state.lastWeekGoals),
               ),
             ),
           ),
