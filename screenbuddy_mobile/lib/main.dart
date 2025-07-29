@@ -1238,18 +1238,19 @@ class _ShopViewState extends State<ShopView> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 85),
-                    Image.asset(
-                      item.assetPath,
-                      width: 48,
-                      height: 48,
-                      fit: BoxFit.contain,
+                    SizedBox(
+                      height: 110,
+                      child: Image.asset(
+                        item.assetPath,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Text(
                       item.name,
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -1257,8 +1258,13 @@ class _ShopViewState extends State<ShopView> {
                         fontFamily: kFont,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text("${item.price} coins", style: bodyWhite),
+                    const SizedBox(height: 4), // smaller spacing under name
+                    Text(
+                      "${item.price} coins",
+                      style: bodyWhite,
+                      textAlign: TextAlign.center,
+                    ),
+                    const Spacer(), // pushes everything slightly up
                   ],
                 ),
               ),
